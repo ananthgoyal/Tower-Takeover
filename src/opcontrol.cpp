@@ -26,12 +26,11 @@ void opcontrol() {
 	okapi::Motor indexer (-9);
 	okapi::Motor capFlipper(-3, false, okapi::AbstractMotor::gearset::red);
 
-	auto myChassis = okapi::ChassisControllerFactory::create({2, 10}, {20, 11});
+	auto myChassis = okapi::ChassisControllerFactory::create(2, 10, 20, 11);
 
 
 	while (true) {
-		myChassis.tank(controller.getAnalog(okapi::ControllerAnalog::leftY) + controller.getAnalog(okapi::ControllerAnalog::rightX),
-	controller.getAnalog(okapi::ControllerAnalog::leftY) - controller.getAnalog(okapi::ControllerAnalog::rightX));
+		myChassis.arcade(controller.getAnalog(okapi::ControllerAnalog::rightX), controller.getAnalog(okapi::ControllerAnalog::leftY));
 
 		intake.controllerSet(controller.getDigital(okapi::ControllerDigital::L2) - controller.getDigital(okapi::ControllerDigital::L1));
 		indexer.controllerSet(controller.getDigital(okapi::ControllerDigital::R2) - controller.getDigital(okapi::ControllerDigital::R1));
@@ -45,7 +44,7 @@ void opcontrol() {
 /*
 void flywheelTask(void* param) {
 	okapi::Motor flywheel1(1, true, okapi::AbstractMotor::gearset::green);
-	okapi::Motor flywheel2(6, false, okapi::AbstractMotor::gearset::green);
+	okapi::Motor flywheel2(5, false, okapi::AbstractMotor::gearset::green);
 	//pros::Motor l_flywheel1(-1);
 	//pros::Motor l_flywheel2(5);
 
