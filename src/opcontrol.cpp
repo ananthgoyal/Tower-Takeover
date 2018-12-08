@@ -30,13 +30,19 @@ void flywheelTask(void* param) {
 	okapi::Motor flywheelBot(3, false, okapi::AbstractMotor::gearset::green);
 	okapi::ADIEncoder encoder('C', 'D', true);
 
-	int targetRPM = 2500;
+	int targetRPM = 3000;
 	int curRPM;
+	int velocities[] = {0, 0 ,0, 0, 0, 0, 0, 0, 0, 0};
 	encoder.reset();
   while (true) {
-		curRPM = encoder.get() * 25; // * 100/3
+		for (int i = 0; i < 9; i++) {
+			velocities[i] = velocities[i + 1];
+		}
+		velocities[9] = encoder.get();
+
+		curRPM = (velocities[9] - velocities[0]) * 25 / 9;
 		std::cout << "RPM: " << curRPM << std::endl;
-		encoder.reset();
+
 		if (targetRPM < curRPM) {
 			flywheelTop.controllerSet(0.5);
 			flywheelBot.controllerSet(0.5);
