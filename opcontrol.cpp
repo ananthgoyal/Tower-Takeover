@@ -14,53 +14,23 @@
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	auto chassis = ChassisControllerFactory::create({Motor(11), Motor(1)}, {Motor(-20), Motor(-10)});
-	Controller controller;
-	Motor indexer(9);
-	Motor flywheelTop(2);
-	Motor flywheelBot(-3);
-	Motor flipper(5);
+	okapi::Controller controller;
+	okapi::Motor intake (8);
+	okapi::Motor indexer (-9);
+	okapi::Motor capFlipper(-3, false, okapi::AbstractMotor::gearset::red);
+	okapi::Motor flywheel(-1);
+
+	auto myChassis = okapi::ChassisControllerFactory::create(
+		 2, 10, 20, 11
+	);
+
 	while (true) {
-		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		if (controller.getDigital(ControllerDigital::L1))
-		{
-			indexer.moveVelocity(-100);
-		}
-		else if (controller.getDigital(ControllerDigital::L2))
-		{
-			indexer.moveVelocity(100);
-		}
-		else
-		{
-			indexer.moveVelocity(0);
-		}
-		if (controller.getDigital(ControllerDigital::R2))
-		{
-			flywheelTop.moveVelocity(200);
-			flywheelBot.moveVelocity(200);
-		}
-		else if (controller.getDigital(ControllerDigital::R1))
-		{
-			flywheelTop.moveVelocity(-200);
-			flywheelBot.moveVelocity(-200);
-		}
-		else
-		{
-			flywheelTop.moveVelocity(0);
-			flywheelBot.moveVelocity(0);
-		}
-		if (controller.getDigital(ControllerDigital::up))
-		{
-			flipper.moveVelocity(-100);
-		}
-		else if (controller.getDigital(ControllerDigital::down))
-		{
-			flipper.moveVelocity(100);
-		}
-		else
-		{
-			flipper.moveVelocity(0);
-		}
+		myChassis.arcade(controller.getAnalog(okapi::ControllerAnalog::rightX), controller.getAnalog(okapi::ControllerAnalog::leftY));
+
+		intake.controllerSet(controller.getDigital(okapi::ControllerDigital::L2) - controller.getDigital(okapi::ControllerDigital::L1));
+		indexer.controllerSet(controller.getDigital(okapi::ControllerDigital::R2) - controller.getDigital(okapi::ControllerDigital::R1));
+		capFlipper.controllerSet(controller.getDigital(okapi::ControllerDigital::up) - controller.getDigital(okapi::ControllerDigital::down));
+
 		pros::delay(20);
 	}
 }
