@@ -1,58 +1,36 @@
 #include "main.h"
 
-//TODO: run prosv5 mut in terminal
-
-okapi::Controller controller;
-
-void flywheelTask(void* param);
-
+/**
+ * Runs the operator control code. This function will be started in its own task
+ * with the default priority and stack size whenever the robot is enabled via
+ * the Field Management System or the VEX Competition Switch in the operator
+ * control mode.
+ *
+ * If no competition control is connected, this function will run immediately
+ * following initialize().
+ *
+ * If the robot is disabled or communications is lost, the
+ * operator control task will be stopped. Re-enabling the robot will restart the
+ * task, not resume it from where it left off.
+ */
 void opcontrol() {
+	okapi::Controller controller;
+	okapi::Motor intake (8);
+	okapi::Motor indexer (-9);
+	okapi::Motor capFlipper(-3, false, okapi::AbstractMotor::gearset::red);
+	okapi::Motor flywheel(-1);
 
-	std::string text("PROS");
-	pros::Task my_task(flywheelTask, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "flywheelTask");
-
-	okapi::Motor indexer (9, true, okapi::AbstractMotor::gearset::red);
-	okapi::Motor capFlipper(5, true, okapi::AbstractMotor::gearset::red);
-
-	auto myChassis = okapi::ChassisControllerFactory::create({1, 11}, {10, 20});
+	auto myChassis = okapi::ChassisControllerFactory::create(
+		 2, 10, 20, 11
+	);
 
 	while (true) {
 		myChassis.arcade(controller.getAnalog(okapi::ControllerAnalog::rightX), controller.getAnalog(okapi::ControllerAnalog::leftY));
+
+		intake.controllerSet(controller.getDigital(okapi::ControllerDigital::L2) - controller.getDigital(okapi::ControllerDigital::L1));
 		indexer.controllerSet(controller.getDigital(okapi::ControllerDigital::R2) - controller.getDigital(okapi::ControllerDigital::R1));
 		capFlipper.controllerSet(controller.getDigital(okapi::ControllerDigital::up) - controller.getDigital(okapi::ControllerDigital::down));
 
 		pros::delay(20);
 	}
-}
-
-void flywheelTask(void* param) {
-	okapi::Motor flywheelTop(2, true, okapi::AbstractMotor::gearset::green);
-	okapi::Motor flywheelBot(3, false, okapi::AbstractMotor::gearset::green);
-	okapi::ADIEncoder encoder('C', 'D', true);
-
-	int targetRPM = 3000;
-	int curRPM;
-	int velocities[] = {0, 0 ,0, 0, 0, 0, 0, 0, 0, 0};
-	encoder.reset();
-  while (true) {
-		for (int i = 0; i < 9; i++) {
-			velocities[i] = velocities[i + 1];
-		}
-		velocities[9] = encoder.get();
-
-		curRPM = (velocities[9] - velocities[0]) * 25 / 9;
-		std::cout << "RPM: " << curRPM << std::endl;
-
-		if (targetRPM < curRPM) {
-			flywheelTop.controllerSet(0.5);
-			flywheelBot.controllerSet(0.5);
-		}
-		else {
-			flywheelTop.controllerSet(1);
-			flywheelBot.controllerSet(1);
-		}
-
-		pros::delay(20);
-
-  }
 }
