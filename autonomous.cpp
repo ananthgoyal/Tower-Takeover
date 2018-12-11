@@ -11,14 +11,5 @@
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-
- using namespace okapi;
-
- auto myChassis = okapi::ChassisControllerFactory::create(
-    2, 10, 20, 11
- );
-
 void autonomous() {
-    myChassis.moveDistance(10000);
-    myChassis.turnAngle(100);
 }
