@@ -1,6 +1,4 @@
 #include "main.h"
-// #include "autism.h"
-
 struct PID
 {
 	float kP;
@@ -165,3 +163,216 @@ void gyroPID(int rotation) {
 	}
 	chassis.tank(0, 0);
 }
+
+/*______________________________________________________________________________________________________________________________________________________________________________*/
+
+void blueFront();
+void redFront();
+void blueBack();
+void redBack();
+
+void autonomous() {
+  switch (lcdCounter) {
+    case 1:
+      blueFront();
+      break;
+    case 2:
+      redFront();
+      break;
+    case 3:
+      blueBack();
+      break;
+    case 4:
+      redBack();
+      break;
+  }
+}
+
+void blueFront () {
+	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
+	chassis.setMaxVelocity(160);
+	pros::Task flywheelTaskHandle(flywheelTask);
+	FW.target = 3000;
+	flywheelToggle = 2;
+
+	pros::delay(3000);
+
+	chassis.moveDistance(36_in);
+	pros::delay(500);
+	chassis.moveDistance(-41_in);
+
+	gyroPID(910);
+	chassis.setMaxVelocity(100);
+	chassis.moveDistance(-6_in);
+
+	indexer.moveVelocity(100);
+	pros::delay(350);
+	indexer.moveVelocity(0);
+
+	pros::delay(100);
+	indexer.moveVelocity(100);
+	pros::delay(200);
+	indexer.moveVelocity(0);
+
+	chassis.moveDistance(33_in);
+
+	indexer.moveVelocity(100);
+	pros::delay(700);
+	indexer.moveVelocity(0);
+
+	FW.target = 0;
+	flywheelToggle = 0;
+
+	gyroPID(150);
+	chassis.setMaxVelocity(130);
+	chassis.moveDistance(13_in);
+	gyroPID(-100);
+	chassis.moveDistance(15_in);
+
+	chassis.moveDistance(-14_in);
+	gyroPID(600);
+	flipper.moveVelocity(-100);
+	pros::delay(500);
+	flipper.moveVelocity(0);
+
+	chassis.moveDistance(-8_in);
+
+	flipper.moveVelocity(100);
+	pros::delay(500);
+	flipper.moveVelocity(0);
+
+}
+void redFront() {}
+void blueBack() {
+	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
+	chassis.setMaxVelocity(150);
+	pros::Task flywheelTaskHandle(flywheelTask);
+	FW.target = 3000;
+	flywheelToggle = 2;
+
+	pros::delay(3000);
+
+	chassis.moveDistance(36_in);//Blue back support with T
+	pros::delay(500);
+	chassis.moveDistance(-41_in);
+
+	gyroPID(930);
+	chassis.moveDistance(37_in);
+
+	pros::delay(50);
+
+	indexer.moveVelocity(100);
+	pros::delay(350);
+	indexer.moveVelocity(0);
+
+	pros::delay(100);
+	indexer.moveVelocity(100);
+	pros::delay(200);
+	indexer.moveVelocity(0);
+
+	chassis.moveDistance(33_in);
+
+	indexer.moveVelocity(100);
+	pros::delay(700);
+	indexer.moveVelocity(0);
+
+	FW.target = 0;
+	flywheelToggle = 0;
+
+	gyroPID(150);
+	chassis.setMaxVelocity(130);
+	chassis.moveDistance(13_in);
+	gyroPID(-120);
+	chassis.moveDistance(17_in);
+
+	chassis.moveDistance(-14_in);
+	gyroPID(600);
+	flipper.moveVelocity(-100);
+	pros::delay(500);
+	flipper.moveVelocity(0);
+
+	chassis.moveDistance(-8_in);
+
+	flipper.moveVelocity(100);
+	pros::delay(500);
+	flipper.moveVelocity(0);
+}
+void redBack() {}
+
+/*______________________________________________________________________________________________________________________________________________________________________________*/
+
+bool selected = false;
+
+void left_button() {
+  if (!selected) {
+    lcdCounter--;
+    if (lcdCounter < 0) {
+      lcdCounter = 0;
+    }
+  }
+}
+void center_button() {
+  if (!selected) {
+    selected = true;
+  }
+}
+void right_button() {
+  if (!selected) {
+    lcdCounter++;
+    if (lcdCounter > 4) {
+      lcdCounter = 4;
+    }
+  }
+}
+std::string convert (int arg) {
+  switch (arg) {
+    case 0:
+      return "No Auton";
+    case 1:
+      return "Blue Front";
+    case 2:
+      return "Red Front";
+    case 3:
+      return "Blue Back";
+    case 4:
+      return "Red Back";
+  }
+}
+
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
+void initialize() {
+	pros::lcd::initialize();
+  pros::lcd::register_btn0_cb(left_button);
+  pros::lcd::register_btn1_cb(center_button);
+  pros::lcd::register_btn2_cb(right_button);
+
+  while (!selected) {
+    pros::lcd::set_text(0, convert(lcdCounter));
+    pros::delay(20);
+  }
+
+	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
+}
+
+/**
+ * Runs while the robot is in the disabled state of Field Management System or
+ * the VEX Competition Switch, following either autonomous or opcontrol. When
+ * the robot is enabled, this task will exit.
+ */
+void disabled() {}
+
+/**
+ * Runs after initialize(), and before autonomous when connected to the Field
+ * Management System or the VEX Competition Switch. This is intended for
+ * competition-specific initialization routines, such as an autonomous selector
+ * on the LCD.
+ *
+ * This task will exit when the robot is enabled and autonomous or opcontrol
+ * starts.
+ */
+void competition_initialize() {}
