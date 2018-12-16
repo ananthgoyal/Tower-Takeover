@@ -10,6 +10,7 @@ okapi::Motor indexer (9, true, okapi::AbstractMotor::gearset::red);
 okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::red);
 okapi::ADIButton indexButton('E');
 
+
 void gyroPID(int rotation);
 void flywheelTask(void* param);
 void flywheelTask2(void* param);
@@ -35,65 +36,22 @@ int indexerToggle = 0;
 int flywheelToggle = 0;
 
 void opcontrol() {
-	auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125_in, 10_in});
+	pros::Task indexerTaskHandle (indexerTask);
+	pros::Task flywheelTaskHandle (flywheelTask);
+	pros::Task flywheelTask2Handle (flywheelTask2);
 
-	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(160);
-	pros::Task flywheelTaskHandle(flywheelTask);
-	FW.target = 3000;
-	flywheelToggle = 2;
+	int flywheelToggle = 0;
+	while (true) {
 
-	pros::delay(3000);
+		myChassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
+		indexer.moveVelocity(100 * controller.getDigital(ControllerDigital::L1) - 100 * controller.getDigital(ControllerDigital::L2));
+		flipper.moveVelocity(100 * controller.getDigital(ControllerDigital::up) - 100 * controller.getDigital(ControllerDigital::down));
 
-	chassis.moveDistance(36_in);
-	pros::delay(500);
-	chassis.moveDistance(-41_in);
-
-	gyroPID(910);
-	chassis.setMaxVelocity(100);
-	chassis.moveDistance(-6_in);
-
-	indexer.moveVelocity(100);
-	pros::delay(350);
-	indexer.moveVelocity(0);
-
-	pros::delay(100);
-	indexer.moveVelocity(100);
-	pros::delay(200);
-	indexer.moveVelocity(0);
-
-	chassis.moveDistance(33_in);
-
-	indexer.moveVelocity(100);
-	pros::delay(700);
-	indexer.moveVelocity(0);
-
-	FW.target = 0;
-	flywheelToggle = 0;
-
-	gyroPID(150);
-	chassis.setMaxVelocity(130);
-	chassis.moveDistance(13_in);
-	gyroPID(-100);
-	chassis.moveDistance(15_in);
-
-	chassis.moveDistance(-14_in);
-	gyroPID(600);
-	flipper.moveVelocity(-100);
-	pros::delay(500);
-	flipper.moveVelocity(0);
-
-	chassis.moveDistance(-8_in);
-	
-	flipper.moveVelocity(100);
-	pros::delay(500);
-	flipper.moveVelocity(0);
-
-
-
+		pros::delay(20);
+	}
 }
 
-void indexerTask (void * params) {
+void indexerTask (void*) {
 	while (true)
 	{
 		if (controller.getDigital(ControllerDigital::X) && !(indexButton.isPressed()))
@@ -148,12 +106,12 @@ void flywheelTask(void*) {
 	}
 }
 
-void flywheelTask2(void* params) {
+void flywheelTask2(void*) {
 	while (true) {
 		if (controller.getDigital(ControllerDigital::R1)) {
 			pros::delay(20);
 			flywheelToggle++;
-			if (flywheelToggle > 3) {
+			if (flywheelToggle > 2) {
 				flywheelToggle = 0;
 			}
 
