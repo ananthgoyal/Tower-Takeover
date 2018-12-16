@@ -1,13 +1,41 @@
 #include "main.h"
+// #include "autism.h"
+bool selected = false;
 
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
+void left_button() {
+  if (!selected) {
+    lcdCounter--;
+    if (lcdCounterGet() < 0) {
+      lcdCounterSet(0);
+    }
+  }
+}
+void center_button() {
+  if (!selected) {
+    selected = true;
+  }
+}
+void right_button() {
+  if (!selected) {
+    lcdCounter++;
+    if (lcdCounterGet() > 4) {
+      lcdCounterSet(4);
+    }
+  }
+}
+std::string convert (int arg) {
+  switch (arg) {
+    case 0:
+      return "No Auton";
+    case 1:
+      return "Blue Front";
+    case 2:
+      return "Red Front";
+    case 3:
+      return "Blue Back";
+    case 4:
+      return "Red Back";
+  }
 }
 
 /**
@@ -18,9 +46,16 @@ void on_center_button() {
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+  pros::lcd::register_btn0_cb(left_button);
+  pros::lcd::register_btn1_cb(center_button);
+  pros::lcd::register_btn2_cb(right_button);
 
-	pros::lcd::register_btn1_cb(on_center_button);
+  while (!selected) {
+    pros::lcd::set_text(0, convert(lcdCounterGet()));
+    pros::delay(20);
+  }
+
+	pros::lcd::set_text(0, convert(lcdCounterGet()) + " (SELECTED)");
 }
 
 /**

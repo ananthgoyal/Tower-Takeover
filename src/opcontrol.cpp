@@ -1,19 +1,5 @@
 #include "main.h"
-
-okapi::Controller controller;
-auto myChassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125_in, 10_in});
-
-okapi::Motor flywheelTop(2, true, okapi::AbstractMotor::gearset::green);
-okapi::Motor flywheelBot(3, false, okapi::AbstractMotor::gearset::green);
-okapi::ADIEncoder encoder('C', 'D', true);
-okapi::Motor indexer (9, true, okapi::AbstractMotor::gearset::red);
-okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::red);
-okapi::ADIButton indexButton('E');
-
-void gyroPID(int rotation);
-void flywheelTask(void* param);
-void flywheelTask2(void* param);
-void indexerTask(void* param);
+// #include "autism.h"
 
 struct PID
 {
@@ -30,114 +16,44 @@ struct PID
 };
 struct PID FW;
 struct PID GY;
-
 int indexerToggle = 0;
 int flywheelToggle = 0;
 
+okapi::Motor flywheelTop(2, true, okapi::AbstractMotor::gearset::green);
+okapi::Motor flywheelBot(3, false, okapi::AbstractMotor::gearset::green);
+okapi::ADIEncoder encoder('C', 'D', true);
+okapi::Motor indexer (9, true, okapi::AbstractMotor::gearset::red);
+okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::red);
+okapi::ADIButton indexButton('E');
+okapi::Controller controller;
+auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125_in, 10_in});
+
+
+void flywheelTask(void* param);
+void gyroPID(int rotation);
+void flywheelTask2(void* param);
+void indexerTask(void* param);
+int lcdCounter = 0;
+
 void opcontrol() {
-	auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125_in, 10_in});
 
-	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
-	pros::Task flywheelTaskHandle(flywheelTask);
-	FW.target = 3000;
-	flywheelToggle = 2;
+	pros::Task indexerTaskHandle (indexerTask);
+	pros::Task flywheelTaskHandle (flywheelTask);
+	pros::Task flywheelTask2Handle (flywheelTask2);
 
-	pros::delay(3000);
+	int flywheelToggle = 0;
+	while (true) {
 
-	chassis.moveDistance(36_in);//Blue back support with T
-	pros::delay(500);
-	chassis.moveDistance(-41_in);
+		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
+		indexer.moveVelocity(100 * controller.getDigital(ControllerDigital::L1) - 100 * controller.getDigital(ControllerDigital::L2));
+		flipper.moveVelocity(100 * controller.getDigital(ControllerDigital::up) - 100 * controller.getDigital(ControllerDigital::down));
 
-	gyroPID(930);
-	chassis.moveDistance(37_in);
+		pros::delay(20);
+	}
 
-	pros::delay(50);
-
-	indexer.moveVelocity(100);
-	pros::delay(350);
-	indexer.moveVelocity(0);
-
-	pros::delay(100);
-	indexer.moveVelocity(100);
-	pros::delay(200);
-	indexer.moveVelocity(0);
-
-	chassis.moveDistance(33_in);
-
-	indexer.moveVelocity(100);
-	pros::delay(700);
-	indexer.moveVelocity(0);
-
-	FW.target = 0;
-	flywheelToggle = 0;
-
-	gyroPID(150);
-	chassis.setMaxVelocity(130);
-	chassis.moveDistance(13_in);
-	gyroPID(-120);
-	chassis.moveDistance(17_in);
-
-	chassis.moveDistance(-14_in);
-	gyroPID(600);
-	flipper.moveVelocity(-100);
-	pros::delay(500);
-	flipper.moveVelocity(0);
-
-	chassis.moveDistance(-8_in);
-	
-	flipper.moveVelocity(100);
-	pros::delay(500);
-	flipper.moveVelocity(0);
-
-	/*
-	chassis.moveDistance(36_in); //Main front blue auton
-	pros::delay(500);
-	chassis.moveDistance(-41_in);
-
-	gyroPID(910);
-	chassis.setMaxVelocity(100);
-	chassis.moveDistance(-6_in);
-
-	indexer.moveVelocity(100);
-	pros::delay(350);
-	indexer.moveVelocity(0);
-
-	pros::delay(100);
-	indexer.moveVelocity(100);
-	pros::delay(200);
-	indexer.moveVelocity(0);
-
-	chassis.moveDistance(33_in);
-
-	indexer.moveVelocity(100);
-	pros::delay(700);
-	indexer.moveVelocity(0);
-
-	FW.target = 0;
-	flywheelToggle = 0;
-
-	gyroPID(150);
-	chassis.setMaxVelocity(130);
-	chassis.moveDistance(13_in);
-	gyroPID(-100);
-	chassis.moveDistance(15_in);
-
-	chassis.moveDistance(-14_in);
-	gyroPID(600);
-	flipper.moveVelocity(-100);
-	pros::delay(500);
-	flipper.moveVelocity(0);
-
-	chassis.moveDistance(-8_in);
-	
-	flipper.moveVelocity(100);
-	pros::delay(500);
-	flipper.moveVelocity(0);
-	*/
 }
 
-void indexerTask (void * params) {
+void indexerTask (void*) {
 	while (true)
 	{
 		if (controller.getDigital(ControllerDigital::X) && !(indexButton.isPressed()))
@@ -158,7 +74,6 @@ void indexerTask (void * params) {
 		pros::delay(20);
 	}
 }
-
 void flywheelTask(void*) {
 	while (true)
 	{
@@ -191,13 +106,12 @@ void flywheelTask(void*) {
 		pros::delay(20);
 	}
 }
-
-void flywheelTask2(void* params) {
+void flywheelTask2(void*) {
 	while (true) {
 		if (controller.getDigital(ControllerDigital::R1)) {
 			pros::delay(20);
 			flywheelToggle++;
-			if (flywheelToggle > 3) {
+			if (flywheelToggle > 2) {
 				flywheelToggle = 0;
 			}
 
@@ -218,7 +132,6 @@ void flywheelTask2(void* params) {
 		}
 	}
 }
-
 void gyroPID(int rotation) {
 	okapi::ADIGyro gyro('B', 1);
 
@@ -240,7 +153,7 @@ void gyroPID(int rotation) {
 		GY.previous_error = GY.error;
 		GY.speed = (GY.kP*GY.error + GY.kD*GY.derivative + GY.kI*GY.integral) * 2.0/127;
 
-		myChassis.tank(GY.speed, -1 * GY.speed);
+		chassis.tank(GY.speed, -1 * GY.speed);
 
 		val = GY.derivative == 0 && abs(GY.error) < 30;
 		//if (val)
@@ -250,5 +163,5 @@ void gyroPID(int rotation) {
 
 		pros::delay(20);
 	}
-	myChassis.tank(0, 0);
+	chassis.tank(0, 0);
 }
