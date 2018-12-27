@@ -169,6 +169,7 @@ void blueFront();
 void redFront();
 void blueBack();
 void redBack();
+void progSkills();
 
 void autonomous() {
   switch (lcdCounter) {
@@ -186,6 +187,7 @@ void autonomous() {
       break;
   }
 }
+
 
 void blueFront () {
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
