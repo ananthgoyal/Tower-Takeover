@@ -185,9 +185,11 @@ void autonomous() {
     case 4:
       redBack();
       break;
+		case 5:
+			progSkills();
+			break;
   }
 }
-
 
 void blueFront () {
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
@@ -405,6 +407,9 @@ void redBack() {
 	chassis.setMaxVelocity(130);
 	chassis.moveDistance(30_in);
 }
+void progSkills() {
+
+}
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
 
@@ -426,15 +431,13 @@ void center_button() {
 void right_button() {
   if (!selected) {
     lcdCounter++;
-    if (lcdCounter > 4) {
-      lcdCounter = 4;
+    if (lcdCounter > 5) {
+      lcdCounter = 5;
     }
   }
 }
 std::string convert (int arg) {
   switch (arg) {
-    case 0:
-      return "No Auton";
     case 1:
       return "Blue Front";
     case 2:
@@ -443,6 +446,10 @@ std::string convert (int arg) {
       return "Blue Back";
     case 4:
       return "Red Back";
+		case 5:
+			return "Prog Skills";
+		default:
+	     return "No Auton";
   }
 }
 
