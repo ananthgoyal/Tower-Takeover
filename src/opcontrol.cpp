@@ -45,7 +45,7 @@ void opcontrol() {
 
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(100 * controller.getDigital(ControllerDigital::L1) - 100 * controller.getDigital(ControllerDigital::L2));
-		flipper.moveVelocity(100 * controller.getDigital(ControllerDigital::up) - 100 * controller.getDigital(ControllerDigital::down));
+		flipper.moveVelocity(100 * controller.getDigital(ControllerDigital::down) - 100 * controller.getDigital(ControllerDigital::up));
 
 		pros::delay(20);
 	}
@@ -408,8 +408,75 @@ void redBack() {
 	chassis.moveDistance(30_in);
 }
 void progSkills() {
+	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
+	chassis.setMaxVelocity(150);
+	pros::Task flywheelTaskHandle(flywheelTask);
+	FW.target = 3000;
+	flywheelToggle = 2;
 
-}
+	//get ball
+	pros::delay(100);
+	chassis.moveDistance(40_in);
+	pros::delay(300);
+
+	//flip back cap
+	gyroPID(-960);
+	chassis.setMaxVelocity(80);
+	flipper.moveVelocity(100);
+	pros::delay(600);
+	flipper.moveVelocity(0);
+	chassis.moveDistance(-7_in);
+	gyroPID(-960);
+
+	flipper.moveVelocity(-100);
+	pros::delay(500);
+	flipper.moveVelocity(0);
+	chassis.moveDistance(7_in);
+
+	gyroPID(0);
+	chassis.setMaxVelocity(100);
+	chassis.moveDistance(-40_in);
+	/*
+	chassis.setMaxVelocity(80);//wall align
+	chassis.moveDistance(-6_in);
+	pros::delay(10);
+	chassis.moveDistance(5_in);
+	*/
+	gyroPID(-1000);
+
+	//get in place to shoot first ball
+	chassis.moveDistance(12_in);
+	pros::delay(350);
+	gyroPID(-1000);
+
+	//shoot first ball
+	indexer.moveVelocity(100);
+	pros::delay(350);
+	indexer.moveVelocity(0);
+
+	//move second ball up
+	pros::delay(100);
+	indexer.moveVelocity(100);
+	pros::delay(200);
+	indexer.moveVelocity(0);
+
+	//get in place to shoot second ball
+	chassis.moveDistance(50_in);
+	gyroPID(-1000);
+
+	//shoot second ball
+	indexer.moveVelocity(100);
+	pros::delay(700);
+
+	//hit low flag
+	gyroPID(-1100);
+	pros::delay(200);
+	chassis.setMaxVelocity(150);
+	chassis.moveDistance(12_in);
+	pros::delay(50);
+	chassis.moveDistance(-8_in);
+
+}//end progSkills
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
 
