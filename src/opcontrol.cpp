@@ -417,7 +417,7 @@ void progSkills() {
 	//get ball
 	pros::delay(100);
 	chassis.moveDistance(40_in);
-	pros::delay(300);
+	pros::delay(200);
 
 	//flip back cap
 	gyroPID(-960);
@@ -428,25 +428,21 @@ void progSkills() {
 	chassis.moveDistance(-7_in);
 	gyroPID(-960);
 
+	//move back from cap
 	flipper.moveVelocity(-100);
-	pros::delay(500);
+	pros::delay(300);
 	flipper.moveVelocity(0);
 	chassis.moveDistance(7_in);
 
-	gyroPID(0);
+	//move to back red tile
+	gyroPID(-70);
 	chassis.setMaxVelocity(100);
 	chassis.moveDistance(-40_in);
-	/*
-	chassis.setMaxVelocity(80);//wall align
-	chassis.moveDistance(-6_in);
-	pros::delay(10);
-	chassis.moveDistance(5_in);
-	*/
 	gyroPID(-1000);
 
 	//get in place to shoot first ball
-	chassis.moveDistance(12_in);
-	pros::delay(350);
+	chassis.moveDistance(30_in);	//15
+	pros::delay(200);
 	gyroPID(-1000);
 
 	//shoot first ball
@@ -461,22 +457,32 @@ void progSkills() {
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	chassis.moveDistance(50_in);
+	chassis.moveDistance(39_in);	//54
+	pros::delay(200);
 	gyroPID(-1000);
 
 	//shoot second ball
 	indexer.moveVelocity(100);
 	pros::delay(700);
+	indexer.moveVelocity(0);
 
 	//hit low flag
-	gyroPID(-1100);
-	pros::delay(200);
 	chassis.setMaxVelocity(150);
-	chassis.moveDistance(12_in);
-	pros::delay(50);
-	chassis.moveDistance(-8_in);
+	gyroPID(-1160);
+	chassis.moveDistance(28_in);
+	pros::delay(200);
 
-}//end progSkills
+	//move back to front red tile
+	chassis.moveDistance(-44_in);
+	pros::delay(200);
+	gyroPID(-70);
+
+	//get ball
+	pros::delay(100);
+	chassis.moveDistance(46_in);
+	pros::delay(200);
+
+}
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
 
