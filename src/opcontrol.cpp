@@ -30,12 +30,9 @@ auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okap
 void flywheelTask(void* param);
 void gyroPID(int rotation);
 void flywheelTask2(void* param);
-void indexerTask(void* param);
 int lcdCounter = 0;
 
 void opcontrol() {
-
-	pros::Task indexerTaskHandle (indexerTask);
 	pros::Task flywheelTaskHandle (flywheelTask);
 	pros::Task flywheelTask2Handle (flywheelTask2);
 
@@ -51,27 +48,6 @@ void opcontrol() {
 
 }
 
-void indexerTask (void*) {
-	while (true)
-	{
-		if (controller.getDigital(ControllerDigital::X) && !(indexButton.isPressed()))
-		{
-			if(indexerToggle == 100){
-				indexerToggle = 0;
-			} else {
-				indexerToggle = 100;
-			}
-
-			while(controller.getDigital(ControllerDigital::X)){
-				pros::delay(20);
-			}
-		}
-		if(indexButton.isPressed()){
-			indexerToggle = 0;
-		}
-		pros::delay(20);
-	}
-}
 void flywheelTask(void*) {
 	while (true)
 	{
@@ -430,8 +406,9 @@ void progSkills() {
 	//move back from cap
 	flipper.moveVelocity(-100);
 	pros::delay(300);
-	flipper.moveVelocity(0);
+	//flipper.moveVelocity(0);
 	chassis.moveDistance(7_in);
+	flipper.moveVelocity(0);	//tmp
 
 	//move to back red tile
 	gyroPID(-70);
@@ -475,13 +452,13 @@ void progSkills() {
 	pros::delay(200);
 
 	//move back to front red tile
-	chassis.moveDistance(-44_in);
+	chassis.moveDistance(-45_in);
 	pros::delay(200);
 	gyroPID(-70);
 
 	//get ball
 	pros::delay(100);
-	chassis.moveDistance(43_in);
+	chassis.moveDistance(30_in);
 	pros::delay(200);
 
 	//middle column (low + middle) flag
