@@ -23,7 +23,6 @@ okapi::ADIEncoder encoder('C', 'D', true);
 okapi::Motor indexer (9, true, okapi::AbstractMotor::gearset::red);
 okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::red);
 okapi::ADIGyro gyro('B', 1);
-okapi::ADIButton indexButton('E');
 okapi::Controller controller;
 auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125_in, 10_in});
 
@@ -184,10 +183,10 @@ void autonomous() {
       break;
     case 4:
       redBack();
-      break;
-		case 5:
-			progSkills();
-			break;
+    break;
+	case 5:
+		progSkills();
+	break;
   }
 }
 
@@ -436,14 +435,17 @@ void progSkills() {
 
 	//move to back red tile
 	gyroPID(-70);
+	flipper.moveVelocity(-100);
+	pros::delay(600);
+	flipper.moveVelocity(0);
 	chassis.setMaxVelocity(100);
 	chassis.moveDistance(-40_in);
 	gyroPID(-1000);
 
 	//get in place to shoot first ball
-	chassis.moveDistance(30_in);	//15
+	chassis.moveDistance(30_in);
 	pros::delay(200);
-	gyroPID(-1000);
+	gyroPID(-1010);
 
 	//shoot first ball
 	indexer.moveVelocity(100);
@@ -457,9 +459,9 @@ void progSkills() {
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	chassis.moveDistance(39_in);	//54
+	chassis.moveDistance(39_in);
 	pros::delay(200);
-	gyroPID(-1000);
+	gyroPID(-1010);
 
 	//shoot second ball
 	indexer.moveVelocity(100);
@@ -468,7 +470,7 @@ void progSkills() {
 
 	//hit low flag
 	chassis.setMaxVelocity(150);
-	gyroPID(-1160);
+	gyroPID(-1170);
 	chassis.moveDistance(28_in);
 	pros::delay(200);
 
@@ -479,8 +481,30 @@ void progSkills() {
 
 	//get ball
 	pros::delay(100);
-	chassis.moveDistance(46_in);
+	chassis.moveDistance(43_in);
 	pros::delay(200);
+
+	//middle column (low + middle) flag
+	gyroPID(-1000);
+	pros::delay(200);
+	chassis.setMaxVelocity(80);
+	chassis.moveDistance(16_in);
+	pros::delay(200);
+	indexer.moveVelocity(100);
+	pros::delay(750);
+	indexer.moveVelocity(0);
+	gyroPID(-1100);
+	chassis.setMaxVelocity(150);
+	chassis.moveDistance(29_in);
+	pros::delay(200);
+
+	//flip front cap
+	chassis.moveDistance(-15_in);
+	gyroPID(0);
+	flipper.moveVelocity(100);
+	pros::delay(600);
+	flipper.moveVelocity(0);
+
 
 }
 
