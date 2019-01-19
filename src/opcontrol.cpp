@@ -20,24 +20,25 @@ int flywheelToggle = 0;
 okapi::Motor flywheelTop(2, true, okapi::AbstractMotor::gearset::green);
 okapi::Motor flywheelBot(3, false, okapi::AbstractMotor::gearset::green);
 okapi::ADIEncoder encoder('C', 'D', true);
-okapi::Motor indexer (9, true, okapi::AbstractMotor::gearset::red);
+okapi::Motor indexer(9, true, okapi::AbstractMotor::gearset::red);
 okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::red);
 okapi::ADIGyro gyro('B', 1);
 okapi::Controller controller;
 auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125_in, 10_in});
 
-
-void flywheelTask(void* param);
+void flywheelTask(void *param);
 void gyroPID(int rotation);
-void flywheelTask2(void* param);
+void flywheelTask2(void *param);
 int lcdCounter = 0;
 
-void opcontrol() {
-	pros::Task flywheelTaskHandle (flywheelTask);
-	pros::Task flywheelTask2Handle (flywheelTask2);
+void opcontrol()
+{
+	pros::Task flywheelTaskHandle(flywheelTask);
+	pros::Task flywheelTask2Handle(flywheelTask2);
 
 	int flywheelToggle = 0;
-	while (true) {
+	while (true)
+	{
 
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(100 * controller.getDigital(ControllerDigital::L1) - 100 * controller.getDigital(ControllerDigital::L2));
@@ -45,10 +46,10 @@ void opcontrol() {
 
 		pros::delay(20);
 	}
-
 }
 
-void flywheelTask(void*) {
+void flywheelTask(void *)
+{
 	while (true)
 	{
 		FW.kP = 0.1;
@@ -61,18 +62,20 @@ void flywheelTask(void*) {
 		FW.derivative = FW.error - FW.previous_error;
 		FW.integral += FW.error;
 		FW.previous_error = FW.error;
-		FW.speed = FW.kP*FW.error + FW.kD*FW.derivative + FW.kI*FW.integral;
+		FW.speed = FW.kP * FW.error + FW.kD * FW.derivative + FW.kI * FW.integral;
 
-		if (controller.getDigital(ControllerDigital::R2)) {
+		if (controller.getDigital(ControllerDigital::R2))
+		{
 			FW.speed = -2;
 		}
-		else if (flywheelToggle == 0) {
+		else if (flywheelToggle == 0)
+		{
 			FW.speed = 0;
 		}
-		else if (FW.speed < 0.5) {
+		else if (FW.speed < 0.5)
+		{
 			FW.speed = 0.5;
 		}
-
 
 		flywheelTop.controllerSet(FW.speed);
 		flywheelBot.controllerSet(FW.speed);
@@ -80,39 +83,48 @@ void flywheelTask(void*) {
 		pros::delay(20);
 	}
 }
-void flywheelTask2(void*) {
-	while (true) {
-		if (controller.getDigital(ControllerDigital::R1)) {
+void flywheelTask2(void *)
+{
+	while (true)
+	{
+		if (controller.getDigital(ControllerDigital::R1))
+		{
 			pros::delay(20);
 			flywheelToggle++;
-			if (flywheelToggle > 2) {
+			if (flywheelToggle > 2)
+			{
 				flywheelToggle = 0;
 			}
 
-
-			switch (flywheelToggle) {
-				case 0: FW.target = 0;
-						break;
-				case 1: FW.target = 2000;
-						break;
-				case 2: FW.target = 3000;
-						break;
+			switch (flywheelToggle)
+			{
+			case 0:
+				FW.target = 0;
+				break;
+			case 1:
+				FW.target = 2000;
+				break;
+			case 2:
+				FW.target = 3000;
+				break;
 			}
 
-			while(controller.getDigital(ControllerDigital::R1)){
+			while (controller.getDigital(ControllerDigital::R1))
+			{
 				pros::delay(20);
 			}
 			pros::delay(50);
 		}
 	}
 }
-void gyroPID(int rotation) {
+void gyroPID(int rotation)
+{
 	GY.target = rotation;
 	//gyro.reset();
 	GY.integral = 0;
 	bool val = false;
 	int timer = 0;
-	while (timer < 50)	//timer < 1000
+	while (timer < 50) //timer < 1000
 	{
 		GY.kP = 0.1;
 		GY.kD = 0.05;
@@ -123,14 +135,14 @@ void gyroPID(int rotation) {
 		GY.derivative = GY.error - GY.previous_error;
 		GY.integral += GY.error;
 		GY.previous_error = GY.error;
-		GY.speed = (GY.kP*GY.error + GY.kD*GY.derivative + GY.kI*GY.integral) * 2.0/127;
+		GY.speed = (GY.kP * GY.error + GY.kD * GY.derivative + GY.kI * GY.integral) * 2.0 / 127;
 
 		chassis.tank(GY.speed, -1 * GY.speed);
 
 		val = GY.derivative == 0 && abs(GY.error) < 30;
 		//if (val)
 		//{
-			timer++;
+		timer++;
 		//}
 
 		pros::delay(20);
@@ -146,27 +158,30 @@ void blueBack();
 void redBack();
 void progSkills();
 
-void autonomous() {
-  switch (lcdCounter) {
-    case 1:
-      blueFront();
-      break;
-    case 2:
-      redFront();
-      break;
-    case 3:
-      blueBack();
-      break;
-    case 4:
-      redBack();
-    break;
+void autonomous()
+{
+	switch (lcdCounter)
+	{
+	case 1:
+		blueFront();
+		break;
+	case 2:
+		redFront();
+		break;
+	case 3:
+		blueBack();
+		break;
+	case 4:
+		redBack();
+		break;
 	case 5:
 		progSkills();
-	break;
-  }
+		break;
+	}
 }
 
-void blueFront () {
+void blueFront()
+{
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	chassis.setMaxVelocity(160);
 	pros::Task flywheelTaskHandle(flywheelTask);
@@ -226,7 +241,8 @@ void blueFront () {
 	pros::delay(500);
 	flipper.moveVelocity(0);
 }
-void redFront() {
+void redFront()
+{
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	chassis.setMaxVelocity(160);
 	pros::Task flywheelTaskHandle(flywheelTask);
@@ -290,7 +306,8 @@ void redFront() {
 	pros::delay(500);
 	flipper.moveVelocity(0);
 }
-void blueBack() {
+void blueBack()
+{
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	chassis.setMaxVelocity(150);
 	pros::Task flywheelTaskHandle(flywheelTask);
@@ -336,7 +353,8 @@ void blueBack() {
 	chassis.setMaxVelocity(130);
 	chassis.moveDistance(30_in);
 }
-void redBack() {
+void redBack()
+{
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	chassis.setMaxVelocity(150);
 	pros::Task flywheelTaskHandle(flywheelTask);
@@ -382,7 +400,8 @@ void redBack() {
 	chassis.setMaxVelocity(130);
 	chassis.moveDistance(30_in);
 }
-void progSkills() {
+void progSkills()
+{
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	chassis.setMaxVelocity(150);
 	pros::Task flywheelTaskHandle(flywheelTask);
@@ -390,7 +409,7 @@ void progSkills() {
 	flywheelToggle = 2;
 
 	//get ball
-	pros::delay(100);
+	pros::delay(200);
 	chassis.moveDistance(40_in);
 	pros::delay(200);
 
@@ -406,9 +425,8 @@ void progSkills() {
 	//move back from cap
 	flipper.moveVelocity(-100);
 	pros::delay(300);
-	//flipper.moveVelocity(0);
+	flipper.moveVelocity(0);
 	chassis.moveDistance(7_in);
-	flipper.moveVelocity(0);	//tmp
 
 	//move to back red tile
 	gyroPID(-70);
@@ -452,17 +470,22 @@ void progSkills() {
 	pros::delay(200);
 
 	//move back to front red tile
-	chassis.moveDistance(-45_in);
+	chassis.moveDistance(-44_in);
 	pros::delay(200);
 	gyroPID(-70);
 
+	//wall allign
+	chassis.setMaxVelocity(70);
+	chassis.moveDistance(-8_in);
+	chassis.setMaxVelocity(150);
+
 	//get ball
-	pros::delay(100);
-	chassis.moveDistance(30_in);
+	pros::delay(200);
+	chassis.moveDistance(47_in); //43
 	pros::delay(200);
 
 	//middle column (low + middle) flag
-	gyroPID(-1000);
+	gyroPID(-950);
 	pros::delay(200);
 	chassis.setMaxVelocity(80);
 	chassis.moveDistance(16_in);
@@ -470,61 +493,84 @@ void progSkills() {
 	indexer.moveVelocity(100);
 	pros::delay(750);
 	indexer.moveVelocity(0);
-	gyroPID(-1100);
+	gyroPID(-1100);	//-1100
 	chassis.setMaxVelocity(150);
-	chassis.moveDistance(29_in);
+	chassis.moveDistance(32_in);
 	pros::delay(200);
 
 	//flip front cap
-	chassis.moveDistance(-15_in);
-	gyroPID(0);
+	chassis.moveDistance(-22_in);
+	FW.target = 0;
+	flywheelToggle = 0;
 	flipper.moveVelocity(100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
+	gyroPID(-200);
+	chassis.setMaxVelocity(80);
+	chassis.moveDistance(-3_in);
+	flipper.moveVelocity(-80);	//-100
+	pros::delay(1000);
+	flipper.moveVelocity(0);
 
-
+	//move between red tiles
+	gyroPID(1250);
+	chassis.setMaxVelocity(130);	//150
+	chassis.moveDistance(67_in);
+	pros::delay(200);
+	gyroPID(-100);
+	chassis.moveDistance(82_in);
 }
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
 
 bool selected = false;
 
-void left_button() {
-  if (!selected) {
-    lcdCounter--;
-    if (lcdCounter < 0) {
-      lcdCounter = 0;
-    }
-  }
+void left_button()
+{
+	if (!selected)
+	{
+		lcdCounter--;
+		if (lcdCounter < 0)
+		{
+			lcdCounter = 0;
+		}
+	}
 }
-void center_button() {
-  if (!selected) {
-    selected = true;
-  }
+void center_button()
+{
+	if (!selected)
+	{
+		selected = true;
+	}
 }
-void right_button() {
-  if (!selected) {
-    lcdCounter++;
-    if (lcdCounter > 5) {
-      lcdCounter = 5;
-    }
-  }
+void right_button()
+{
+	if (!selected)
+	{
+		lcdCounter++;
+		if (lcdCounter > 5)
+		{
+			lcdCounter = 5;
+		}
+	}
 }
-std::string convert (int arg) {
-  switch (arg) {
-    case 1:
-      return "Blue Front";
-    case 2:
-      return "Red Front";
-    case 3:
-      return "Blue Back";
-    case 4:
-      return "Red Back";
-		case 5:
-			return "Prog Skills";
-		default:
-	     return "No Auton";
-  }
+std::string convert(int arg)
+{
+	switch (arg)
+	{
+	case 1:
+		return "Blue Front";
+	case 2:
+		return "Red Front";
+	case 3:
+		return "Blue Back";
+	case 4:
+		return "Red Back";
+	case 5:
+		return "Prog Skills";
+	default:
+		return "No Auton";
+	}
 }
 
 /**
@@ -533,16 +579,18 @@ std::string convert (int arg) {
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
-void initialize() {
+void initialize()
+{
 	pros::lcd::initialize();
-  pros::lcd::register_btn0_cb(left_button);
-  pros::lcd::register_btn1_cb(center_button);
-  pros::lcd::register_btn2_cb(right_button);
+	pros::lcd::register_btn0_cb(left_button);
+	pros::lcd::register_btn1_cb(center_button);
+	pros::lcd::register_btn2_cb(right_button);
 
-  while (!selected) {
-    pros::lcd::set_text(0, convert(lcdCounter));
-    pros::delay(20);
-  }
+	while (!selected)
+	{
+		pros::lcd::set_text(0, convert(lcdCounter));
+		pros::delay(20);
+	}
 
 	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
 	gyro.reset();
