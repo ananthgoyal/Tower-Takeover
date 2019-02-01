@@ -69,7 +69,7 @@ void flywheelTask(void *)
 
 		if (controller.getDigital(ControllerDigital::R2))
 		{
-			FW.speed = -1.5;	//-2
+			FW.speed = -.75;	//-2
 		}
 		else if (flywheelToggle == 0)
 		{
@@ -301,8 +301,8 @@ void redFront()
 	pros::delay(100);
 
 	//get ball
-	movePID(34, 2000);
-	movePID(-14, 2000);
+	movePID(34, 1750);
+	movePID(-14, 1500);
 
 	//get front cap
 	gyroPID(860);
@@ -310,7 +310,7 @@ void redFront()
 	flipper.moveVelocity(100);
 	pros::delay(500);
 	flipper.moveVelocity(0);
-	movePID(-7, 2000);
+	movePID(-7, 1000);
 	flipper.moveVelocity(-80);
 	pros::delay(300);
 	flipper.moveVelocity(0);
@@ -318,7 +318,7 @@ void redFront()
 	//move in place to shoot first ball
 	gyroPID(1400);
 	flipper.moveVelocity(-100);
-	movePID(31, 2000);
+	movePID(32, 2000);
 	flipper.moveVelocity(0);
 	gyroPID(-950);
 
@@ -333,7 +333,7 @@ void redFront()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	movePID(40, 2000);
+	movePID(40, 1000);
 	gyroPID(-950);
 
 	//shoot second ball
@@ -415,8 +415,8 @@ void redBack()
 	pros::delay(100);
 
 	//get ball
-	movePID(34, 2000);
-	movePID(-5, 2000);
+	movePID(34, 1000);
+	movePID(-5, 500);
 
 	//get back cap
 	gyroPID(-1340);
@@ -504,8 +504,10 @@ void redBackPark()
 	pros::delay(100);
 
 	//get ball
-	movePID(34, 2000);
-	movePID(-5, 2000);
+	movePID(37, 1700);
+	movePID(-9, 800);
+	FW.target = 0;
+	flywheelToggle = 0;
 
 	//get back cap
 	gyroPID(-1340);
@@ -513,15 +515,16 @@ void redBackPark()
 	flipper.moveVelocity(100);
 	pros::delay(400);
 	flipper.moveVelocity(0);
-	movePID(-13, 2000);
+	movePID(-15, 1300);
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
 
 	//park
+	movePID(10,1100);
 	gyroPID(-960);
 	
-	movePID(47, 2000);
+	movePID(37, 2000);
 }
 void progSkills()
 {
