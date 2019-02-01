@@ -14,6 +14,8 @@ struct PID
 };
 struct PID FW;
 struct PID GY;
+struct PID DL;
+struct PID DR;
 int indexerToggle = 0;
 int flywheelToggle = 0;
 
@@ -24,10 +26,11 @@ okapi::Motor indexer(9, true, okapi::AbstractMotor::gearset::red);
 okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::red);
 okapi::ADIGyro gyro('B', 1);
 okapi::Controller controller;
-auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125_in, 10_in});
+auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
 void flywheelTask(void *param);
 void gyroPID(int rotation);
+void movePID(int distance, int ms);
 void flywheelTask2(void *param);
 int lcdCounter = 0;
 
@@ -149,6 +152,47 @@ void gyroPID(int rotation)
 	}
 	chassis.tank(0, 0);
 }
+void movePID(int distance, int ms) {
+	int target = distance * 360 / (2 * 3.1415 * (4.125 / 2));
+	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00295, 0, 0.0015);	//0.00275
+	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00265, 0, 0.0015);	//0.00275
+	chassis.resetSensors();
+
+	int timer = 0;
+	double errorL;
+	double errorR;
+	double powerL;
+	double powerR;
+	double multiplier = 1;
+	while(timer < ms){
+		if(target < 0 && timer < 400) multiplier = 0.3;	//0.3
+		else {
+			if(multiplier < 1){
+				multiplier += 0.1;
+			}
+		}
+
+		errorL = target - chassis.getSensorVals()[0];
+		errorR = target - chassis.getSensorVals()[1];
+		powerL = drivePIDL.step(errorL);
+		powerR = drivePIDR.step(errorR);
+		
+		if(powerL > 1) powerL = 1;
+		if(powerR > 1) powerL = 1;
+		if(powerL < -1) powerL = -1;
+		if(powerR < -1) powerR = -1;
+
+		powerL *= multiplier;
+		powerR *= multiplier;
+
+		chassis.tank(-powerL, -powerR);
+		std::cout << powerL << " " << powerR << std::endl;
+
+		pros::delay(20);
+
+		timer += 20;
+	}
+}
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
 
@@ -192,32 +236,32 @@ void blueFront()
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
+	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
 
 	//get ball
-	chassis.moveDistance(34_in);
-	chassis.moveDistance(-10_in);
+	movePID(34, 2000);
+	movePID(-10, 2000);
 
 	//get front cap
 	gyroPID(-960);
-	chassis.setMaxVelocity(100);
+	
 	flipper.moveVelocity(100);
 	pros::delay(500);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(-7_in);
+	movePID(-7, 2000);
 	flipper.moveVelocity(-80);
 	pros::delay(300);
 	flipper.moveVelocity(0);
 
 	//move in place to shoot first ball
-	chassis.setMaxVelocity(150);
+	
 	gyroPID(-1300);
 	flipper.moveVelocity(-100);
-	chassis.moveDistance(36_in);
+	movePID(36, 2000);
 	flipper.moveVelocity(0);
 	gyroPID(900);
 
@@ -232,7 +276,7 @@ void blueFront()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	chassis.moveDistance(53_in);
+	movePID(53, 2000);
 	gyroPID(900);
 
 	//shoot second ball
@@ -242,40 +286,39 @@ void blueFront()
 	flywheelToggle = 0;
 
 	//hit low flag
-	chassis.setMaxVelocity(150);
+	
 	gyroPID(1070);
-	chassis.moveDistance(32_in);
+	movePID(32, 2000);
 }
 void redFront()
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
+	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
 
 	//get ball
-	chassis.moveDistance(34_in);
-	chassis.moveDistance(-10_in);
+	movePID(34, 2000);
+	movePID(-14, 2000);
 
 	//get front cap
 	gyroPID(860);
-	chassis.setMaxVelocity(100);
+	
 	flipper.moveVelocity(100);
 	pros::delay(500);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(-7_in);
+	movePID(-7, 2000);
 	flipper.moveVelocity(-80);
 	pros::delay(300);
 	flipper.moveVelocity(0);
 
 	//move in place to shoot first ball
-	chassis.setMaxVelocity(150);
 	gyroPID(1400);
 	flipper.moveVelocity(-100);
-	chassis.moveDistance(31_in);
+	movePID(31, 2000);
 	flipper.moveVelocity(0);
 	gyroPID(-950);
 
@@ -290,8 +333,8 @@ void redFront()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	chassis.moveDistance(40_in);
-	gyroPID(-930);
+	movePID(40, 2000);
+	gyroPID(-950);
 
 	//shoot second ball
 	indexer.moveVelocity(100);
@@ -300,39 +343,39 @@ void redFront()
 	flywheelToggle = 0;
 
 	//hit low flag
-	chassis.setMaxVelocity(150);
-	gyroPID(-1120);
-	chassis.moveDistance(32_in);
+	
+	gyroPID(-1150);
+	movePID(32, 2000);
 }
 void blueBack()
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
+	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
 
 	//get ball
-	chassis.moveDistance(34_in);
-	chassis.moveDistance(-5_in);
+	movePID(34, 2000);
+	movePID(-5, 2000);
 
 	//get back cap
 	gyroPID(1250);
-	chassis.setMaxVelocity(120);
+	
 	flipper.moveVelocity(100);
 	pros::delay(500);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(-11_in);
+	movePID(-11, 2000);
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
 
 	//move to between spawns
-	chassis.setMaxVelocity(150);
+	
 	gyroPID(1550);
-	chassis.moveDistance(47_in);
+	movePID(47, 2000);
 	gyroPID(900);
 
 	//shoot first ball
@@ -346,7 +389,7 @@ void blueBack()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	chassis.moveDistance(53_in);
+	movePID(53, 2000);
 	gyroPID(900);
 
 	//shoot second ball
@@ -356,40 +399,40 @@ void blueBack()
 	flywheelToggle = 0;
 
 	//hit low flag
-	chassis.setMaxVelocity(150);
+	
 	gyroPID(1050);
-	chassis.moveDistance(32_in);
+	movePID(32, 2000);
 
 }
 void redBack()
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
+	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
 
 	//get ball
-	chassis.moveDistance(34_in);
-	chassis.moveDistance(-5_in);
+	movePID(34, 2000);
+	movePID(-5, 2000);
 
 	//get back cap
 	gyroPID(-1340);
-	chassis.setMaxVelocity(120);
+	
 	flipper.moveVelocity(100);
 	pros::delay(400);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(-13_in);
+	movePID(-13, 2000);
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
 
 	//move to between spawns
-	chassis.setMaxVelocity(150);
+	
 	gyroPID(-1550);
-	chassis.moveDistance(47_in);
+	movePID(47, 2000);
 
 	//rotate to face flags
 	gyroPID(-995);
@@ -405,7 +448,7 @@ void redBack()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	chassis.moveDistance(51_in);	//47
+	movePID(51, 2000);	//47
 	gyroPID(-970);
 
 	//shoot second ball
@@ -415,76 +458,76 @@ void redBack()
 	flywheelToggle = 0;
 
 	//hit low flag
-	chassis.setMaxVelocity(150);
+	
 	gyroPID(-1100);
-	chassis.moveDistance(32_in);
+	movePID(32, 2000);
 	
 }
 void blueBackPark() 
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
+	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
 
 	//get ball
-	chassis.moveDistance(34_in);
-	chassis.moveDistance(-5_in);
+	movePID(34, 2000);
+	movePID(-5, 2000);
 
 	//get back cap
 	gyroPID(1250);
-	chassis.setMaxVelocity(120);
+	
 	flipper.moveVelocity(100);
 	pros::delay(500);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(-11_in);
+	movePID(-11, 2000);
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
 
 	//park
 	gyroPID(960);
-	chassis.setMaxVelocity(130);
-	chassis.moveDistance(47_in);
+	
+	movePID(47, 2000);
 }
 void redBackPark() 
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
+	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
 
 	//get ball
-	chassis.moveDistance(34_in);
-	chassis.moveDistance(-5_in);
+	movePID(34, 2000);
+	movePID(-5, 2000);
 
 	//get back cap
 	gyroPID(-1340);
-	chassis.setMaxVelocity(120);
+	
 	flipper.moveVelocity(100);
 	pros::delay(400);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(-13_in);
+	movePID(-13, 2000);
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
 
 	//park
 	gyroPID(-960);
-	chassis.setMaxVelocity(130);
-	chassis.moveDistance(47_in);
+	
+	movePID(47, 2000);
 }
 void progSkills()
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
-	chassis.setMaxVelocity(150);
+	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
@@ -492,35 +535,35 @@ void progSkills()
 
 	//get ball
 	pros::delay(200);
-	chassis.moveDistance(40_in);
+	movePID(40, 2000);
 	pros::delay(200);
 
 	//flip back cap
 	gyroPID(-960);
-	chassis.setMaxVelocity(80);
+	
 	flipper.moveVelocity(100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(-7_in);
+	movePID(-7, 2000);
 	gyroPID(-960);
 
 	//move back from cap
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(7_in);
+	movePID(7, 2000);
 
 	//move to back red tile
 	gyroPID(-70);
 	flipper.moveVelocity(-100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
-	chassis.setMaxVelocity(100);
-	chassis.moveDistance(-40_in);
+	
+	movePID(-40, 2000);
 	gyroPID(-1030);	//-1000
 
 	//get in place to shoot first ball
-	chassis.moveDistance(30_in);
+	movePID(30, 2000);
 	pros::delay(200);
 	gyroPID(-1010);
 
@@ -536,9 +579,9 @@ void progSkills()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	chassis.moveDistance(39_in);
+	movePID(39, 2000);
 	pros::delay(200);
-	gyroPID(-1010);
+	gyroPID(-1050);
 
 	//shoot second ball
 	indexer.moveVelocity(100);
@@ -546,67 +589,68 @@ void progSkills()
 	indexer.moveVelocity(0);
 
 	//hit low flag
-	chassis.setMaxVelocity(150);
+	
 	gyroPID(-1170);
-	chassis.moveDistance(28_in);
+	movePID(28, 2000);
 	pros::delay(200);
 
 	//move back to front red tile
-	chassis.moveDistance(-44_in);
+	movePID(-39, 2000);
 	pros::delay(200);
 	gyroPID(-70);
 
-	//wall allign
-	chassis.setMaxVelocity(70);
-	chassis.moveDistance(-8_in);
-	chassis.setMaxVelocity(150);
+	//"wall allign"
+	
+	movePID(-8, 2000);
+	
 
 	//get ball
 	pros::delay(200);
-	chassis.moveDistance(47_in);
+	movePID(47, 2000);
 	pros::delay(200);
 
 	//middle column (low + middle) flag
-	gyroPID(-950);
+	movePID(-4, 2000);
+	gyroPID(-920);
 	pros::delay(200);
-	chassis.setMaxVelocity(80);
-	chassis.moveDistance(16_in);
+	
+	movePID(16, 2000);
 	pros::delay(200);
 	indexer.moveVelocity(100);
 	pros::delay(750);
 	indexer.moveVelocity(0);
 	gyroPID(-1100);	//-1100
-	chassis.setMaxVelocity(150);
-	chassis.moveDistance(32_in);
+	
+	movePID(32, 2000);
 	pros::delay(200);
 
 	//flip front cap
-	chassis.moveDistance(-22_in);
+	movePID(-22, 2000);
 	FW.target = 0;
 	flywheelToggle = 0;
 	flipper.moveVelocity(100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
 	gyroPID(-200);
-	chassis.setMaxVelocity(80);
-	chassis.moveDistance(-6_in);	//-3
-	pros::delay(300);				//none
+	
+	movePID(-6, 2000);
+	pros::delay(300);			
 	flipper.moveVelocity(-80);
 	pros::delay(1000);
 	flipper.moveVelocity(0);
-	chassis.moveDistance(3_in);		//none
+	movePID(3, 2000);		
 
 	//move between red tiles
 	gyroPID(1250);
-	chassis.setMaxVelocity(130);
-	chassis.moveDistance(67_in);
+	
+	movePID(67, 2000);
 	pros::delay(200);
 
 	//park
 	gyroPID(-100);
 	FW.target = 2000;
 	flywheelToggle = 1;
-	chassis.moveDistance(82_in);
+	movePID(82, 2000);
 }
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
@@ -678,14 +722,15 @@ void initialize()
 	pros::lcd::register_btn1_cb(center_button);
 	pros::lcd::register_btn2_cb(right_button);
 
+	
 	while (!selected)
 	{
 		pros::lcd::set_text(0, convert(lcdCounter));
 		pros::delay(20);
 	}
+	
 
 	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
-	//gyro.reset();
 }
 
 /**
@@ -704,4 +749,4 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competitionitialize() {}
