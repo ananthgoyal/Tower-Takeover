@@ -26,13 +26,13 @@ okapi::Motor indexer(9, true, okapi::AbstractMotor::gearset::red);
 okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::red);
 okapi::ADIGyro gyro('B', 1);
 okapi::Controller controller;
-auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
+auto chassis = okapi::ChassisControllerFactory::create({1, 12}, {-10, -19}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
 void flywheelTask(void *param);
 void gyroPID(int rotation);
 void movePID(int distance, int ms);
 void flywheelTask2(void *param);
-int lcdCounter = 0;
+int lcdCounter = 7;
 
 void opcontrol()
 {
@@ -59,7 +59,7 @@ void flywheelTask(void *)
 		FW.kD = 0.05;
 		FW.kI = 0;
 		FW.sensor = encoder.get() * 25;
-		std::cout << "RPM: " << FW.sensor << std::endl;
+		//std::cout << "RPM: " << FW.sensor << std::endl;
 		encoder.reset();
 		FW.error = FW.target - FW.sensor;
 		FW.derivative = FW.error - FW.previous_error;
@@ -69,7 +69,7 @@ void flywheelTask(void *)
 
 		if (controller.getDigital(ControllerDigital::R2))
 		{
-			FW.speed = -.75;	//-2
+			FW.speed = -0.75;
 		}
 		else if (flywheelToggle == 0)
 		{
@@ -105,7 +105,7 @@ void flywheelTask2(void *)
 				FW.target = 0;
 				break;
 			case 1:
-				FW.target = 2000;
+				FW.target = 2500;
 				break;
 			case 2:
 				FW.target = 3000;
@@ -133,7 +133,7 @@ void gyroPID(int rotation)
 		GY.kD = 0.05;
 		GY.kI = 0;
 		GY.sensor = gyro.get();
-		std::cout << "POS: " << GY.sensor << std::endl;
+		//std::cout << "POS: " << GY.sensor << std::endl;
 		GY.error = GY.target - GY.sensor;
 		GY.derivative = GY.error - GY.previous_error;
 		GY.integral += GY.error;
@@ -142,7 +142,7 @@ void gyroPID(int rotation)
 
 		chassis.tank(GY.speed, -1 * GY.speed);
 
-		val = GY.derivative == 0 && abs(GY.error) < 30;
+		val = GY.derivative == 0 && abs(GY.error) < 5;	//30
 		//if (val)
 		//{
 		timer++;
@@ -154,8 +154,9 @@ void gyroPID(int rotation)
 }
 void movePID(int distance, int ms) {
 	int target = distance * 360 / (2 * 3.1415 * (4.125 / 2));
-	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00295, 0, 0.0015);	//0.00275
-	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00265, 0, 0.0015);	//0.00275
+	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00275, 0, 0.0015);
+	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00275, 0, 0.0015);
+	
 	chassis.resetSensors();
 
 	int timer = 0;
@@ -165,7 +166,7 @@ void movePID(int distance, int ms) {
 	double powerR;
 	double multiplier = 1;
 	while(timer < ms){
-		if(target < 0 && timer < 400) multiplier = 0.3;	//0.3
+		if(target < 0 && timer < 400) multiplier = 0.3;
 		else {
 			if(multiplier < 1){
 				multiplier += 0.1;
@@ -185,7 +186,7 @@ void movePID(int distance, int ms) {
 		powerL *= multiplier;
 		powerR *= multiplier;
 
-		chassis.tank(-powerL, -powerR);
+		chassis.tank(-powerL, -powerL);	//second is powerR
 		std::cout << powerL << " " << powerR << std::endl;
 
 		pros::delay(20);
@@ -529,46 +530,45 @@ void redBackPark()
 void progSkills()
 {
 	gyro.reset();
-	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	
 	pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
-	pros::delay(100);
 
 	//get ball
-	pros::delay(200);
-	movePID(40, 2000);
-	pros::delay(200);
+	movePID(40, 1800);
 
 	//flip back cap
 	gyroPID(-960);
-	
 	flipper.moveVelocity(100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
-	movePID(-7, 2000);
+	movePID(-8, 800);
 	gyroPID(-960);
 
 	//move back from cap
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
-	movePID(7, 2000);
+	movePID(7, 600);
 
 	//move to back red tile
 	gyroPID(-70);
 	flipper.moveVelocity(-100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
-	
-	movePID(-40, 2000);
-	gyroPID(-1030);	//-1000
+	movePID(-45, 2400);
+	pros::delay(200);
+
+	//wall align
+	movePID(-5, 1200);
+	gyro.reset();
+	movePID(6.5, 600);
+	gyroPID(-970);
 
 	//get in place to shoot first ball
-	movePID(30, 2000);
-	pros::delay(200);
-	gyroPID(-1010);
+	movePID(30, 1500);
+	gyroPID(-970);
 
 	//shoot first ball
 	indexer.moveVelocity(100);
@@ -582,9 +582,8 @@ void progSkills()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	movePID(39, 2000);
-	pros::delay(200);
-	gyroPID(-1050);
+	movePID(39, 1800);
+	gyroPID(-970);
 
 	//shoot second ball
 	indexer.moveVelocity(100);
@@ -592,68 +591,67 @@ void progSkills()
 	indexer.moveVelocity(0);
 
 	//hit low flag
-	
-	gyroPID(-1170);
+	gyroPID(-1120);
 	movePID(28, 2000);
-	pros::delay(200);
 
 	//move back to front red tile
-	movePID(-39, 2000);
-	pros::delay(200);
+	gyroPID(-1150);
+	movePID(-47, 2000);
 	gyroPID(-70);
 
-	//"wall allign"
-	
-	movePID(-8, 2000);
-	
-
 	//get ball
-	pros::delay(200);
 	movePID(47, 2000);
-	pros::delay(200);
 
 	//middle column (low + middle) flag
-	movePID(-4, 2000);
-	gyroPID(-920);
-	pros::delay(200);
-	
-	movePID(16, 2000);
-	pros::delay(200);
+	movePID(-4, 600);
+	gyroPID(-960);
+	movePID(16, 1500);
 	indexer.moveVelocity(100);
 	pros::delay(750);
 	indexer.moveVelocity(0);
-	gyroPID(-1100);	//-1100
-	
+	gyroPID(-1100);
 	movePID(32, 2000);
-	pros::delay(200);
 
-	//flip front cap
+	//flip red front cap
 	movePID(-22, 2000);
-	FW.target = 0;
-	flywheelToggle = 0;
 	flipper.moveVelocity(100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
-	gyroPID(-200);
-	
-	movePID(-6, 2000);
-	pros::delay(300);			
+	gyroPID(-250);
+	movePID(-6, 2000);	
 	flipper.moveVelocity(-80);
 	pros::delay(1000);
 	flipper.moveVelocity(0);
-	movePID(3, 2000);		
+	movePID(3, 200);
 
-	//move between red tiles
-	gyroPID(1250);
+	//flip blue front cap
+	gyroPID(-2000);
+	flipper.moveVelocity(100);
+	movePID(-55, 2500);
+	flipper.moveVelocity(-80);
+	pros::delay(1000);
+	flipper.moveVelocity(0);
+
+	//shoot possibly recycled ball
+	gyroPID(-900);
+	movePID(-2, 200);		//x
+	indexer.moveVelocity(100);
+	pros::delay(600);
+
+	//hit low flag
+	gyroPID(-1050);
+	movePID(27, 2000);	//25
+	FW.target = 0;
+	flywheelToggle = 0;
+	indexer.moveVelocity(0);
 	
-	movePID(67, 2000);
-	pros::delay(200);
+	//move between blue tiles
+	gyroPID(-1350);
+	movePID(-75, 3000);
 
 	//park
-	gyroPID(-100);
-	FW.target = 2000;
-	flywheelToggle = 1;
-	movePID(82, 2000);
+	gyroPID(-2100);
+	movePID(85, 3500);
 }
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
