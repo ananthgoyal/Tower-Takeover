@@ -36,10 +36,8 @@ int lcdCounter = 7;
 
 void opcontrol()
 {
-	pros::Task flywheelTaskHandle(flywheelTask);
-	pros::Task flywheelTask2Handle(flywheelTask2);
-
-	int flywheelToggle = 0;
+	int flywheelToggle = 2;
+	FW.target = 3000;
 	while (true)
 	{
 
@@ -59,7 +57,7 @@ void flywheelTask(void *)
 		FW.kD = 0.05;
 		FW.kI = 0;
 		FW.sensor = encoder.get() * 25;
-		//std::cout << "RPM: " << FW.sensor << std::endl;
+		std::cout << "RPM: " << FW.sensor << std::endl;
 		encoder.reset();
 		FW.error = FW.target - FW.sensor;
 		FW.derivative = FW.error - FW.previous_error;
@@ -238,7 +236,7 @@ void blueFront()
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	
-	pros::Task flywheelTaskHandle(flywheelTask);
+	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
@@ -296,7 +294,7 @@ void redFront()
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	
-	pros::Task flywheelTaskHandle(flywheelTask);
+	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
@@ -353,7 +351,7 @@ void blueBack()
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	
-	pros::Task flywheelTaskHandle(flywheelTask);
+	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
@@ -410,7 +408,7 @@ void redBack()
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	
-	pros::Task flywheelTaskHandle(flywheelTask);
+	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
@@ -469,7 +467,7 @@ void blueBackPark()
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	
-	pros::Task flywheelTaskHandle(flywheelTask);
+	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
@@ -492,14 +490,14 @@ void blueBackPark()
 	//park
 	gyroPID(960);
 	
-	movePID(47, 2000);
+	movePID(60, 3000);	//47
 }
 void redBackPark() 
 {
 	gyro.reset();
 	chassis.setBrakeMode(okapi::AbstractMotor::brakeMode::coast);
 	
-	pros::Task flywheelTaskHandle(flywheelTask);
+	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 	pros::delay(100);
@@ -525,13 +523,13 @@ void redBackPark()
 	movePID(10,1100);
 	gyroPID(-960);
 	
-	movePID(37, 2000);
+	movePID(50, 3000);	//37
 }
 void progSkills()
 {
 	gyro.reset();
 	
-	pros::Task flywheelTaskHandle(flywheelTask);
+	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 
@@ -732,6 +730,9 @@ void initialize()
 	
 
 	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
+
+	pros::Task flywheelTaskHandle(flywheelTask);
+	pros::Task flywheelTask2Handle(flywheelTask2);
 }
 
 /**
