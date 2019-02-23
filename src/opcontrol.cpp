@@ -40,7 +40,7 @@ void opcontrol()
 	FW.target = 3000;
 	while (true)
 	{
-
+		//std::cout << chassis.getSensorVals()[0] << " " << chassis.getSensorVals()[1] << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(100 * controller.getDigital(ControllerDigital::L1) - 100 * controller.getDigital(ControllerDigital::L2));
 		flipper.moveVelocity(100 * controller.getDigital(ControllerDigital::down) - 100 * controller.getDigital(ControllerDigital::up));
@@ -57,7 +57,7 @@ void flywheelTask(void *)
 		FW.kD = 0.05;
 		FW.kI = 0;
 		FW.sensor = encoder.get() * 25;
-		std::cout << "RPM: " << FW.sensor << std::endl;
+		//std::cout << "RPM: " << FW.sensor << std::endl;
 		encoder.reset();
 		FW.error = FW.target - FW.sensor;
 		FW.derivative = FW.error - FW.previous_error;
@@ -185,7 +185,7 @@ void movePID(int distance, int ms) {
 		powerR *= multiplier;
 
 		chassis.tank(-powerL, -powerL);	//second is powerR
-		std::cout << powerL << " " << powerR << std::endl;
+		//std::cout << powerL << " " << powerR << std::endl;
 
 		pros::delay(20);
 
@@ -529,7 +529,6 @@ void progSkills()
 {
 	gyro.reset();
 	
-	//pros::Task flywheelTaskHandle(flywheelTask);
 	FW.target = 3000;
 	flywheelToggle = 2;
 
@@ -543,19 +542,28 @@ void progSkills()
 	flipper.moveVelocity(0);
 	movePID(-8, 800);
 	gyroPID(-960);
-
-	//move back from cap
 	flipper.moveVelocity(-100);
 	pros::delay(300);
 	flipper.moveVelocity(0);
-	movePID(7, 600);
+	
+	
+	//flip far back cap
+	gyroPID(-1550);
+	flipper.moveVelocity(100);
+	pros::delay(500);
+	flipper.moveVelocity(0);
+	movePID(-13, 1000);
+	flipper.moveVelocity(-100);
+	pros::delay(300);
+	flipper.moveVelocity(0);
+	movePID(20, 1200);
 
 	//move to back red tile
-	gyroPID(-70);
+	gyroPID(-40);	//-70;
 	flipper.moveVelocity(-100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
-	movePID(-45, 2400);
+	movePID(-40, 2400);
 	pros::delay(200);
 
 	//wall align
@@ -565,8 +573,8 @@ void progSkills()
 	gyroPID(-970);
 
 	//get in place to shoot first ball
-	movePID(30, 1500);
-	gyroPID(-970);
+	movePID(29, 1500);
+	gyroPID(-910);
 
 	//shoot first ball
 	indexer.moveVelocity(100);
@@ -581,7 +589,7 @@ void progSkills()
 
 	//get in place to shoot second ball
 	movePID(39, 1800);
-	gyroPID(-970);
+	gyroPID(-910);
 
 	//shoot second ball
 	indexer.moveVelocity(100);
@@ -589,7 +597,7 @@ void progSkills()
 	indexer.moveVelocity(0);
 
 	//hit low flag
-	gyroPID(-1120);
+	gyroPID(-1100);
 	movePID(28, 2000);
 
 	//move back to front red tile
@@ -597,13 +605,19 @@ void progSkills()
 	movePID(-47, 2000);
 	gyroPID(-70);
 
+	//move up possibly recycled ball
+	indexer.moveVelocity(100);
+	pros::delay(200);
+	indexer.moveVelocity(0);
+
 	//get ball
 	movePID(47, 2000);
 
 	//middle column (low + middle) flag
 	movePID(-4, 600);
-	gyroPID(-960);
+	gyroPID(-930);
 	movePID(16, 1500);
+	gyroPID(-930);
 	indexer.moveVelocity(100);
 	pros::delay(750);
 	indexer.moveVelocity(0);
@@ -637,7 +651,7 @@ void progSkills()
 	pros::delay(600);
 
 	//hit low flag
-	gyroPID(-1050);
+	gyroPID(-1100);
 	movePID(27, 2000);	//25
 	FW.target = 0;
 	flywheelToggle = 0;
@@ -646,15 +660,15 @@ void progSkills()
 	//move between blue tiles
 	gyroPID(-1350);
 	movePID(-75, 3000);
-
+ 
 	//park
 	gyroPID(-2100);
-	movePID(85, 3500);
+	movePID(75, 3500);
 }
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
 
-bool selected = false;
+bool selected = true;	//TODO: false
 
 void left_button()
 {
