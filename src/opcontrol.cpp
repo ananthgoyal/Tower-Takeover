@@ -559,7 +559,7 @@ void progSkills()
 	movePID(20, 1200);
 
 	//move to back red tile
-	gyroPID(-40);	//-70;
+	gyroPID(-40);
 	flipper.moveVelocity(-100);
 	pros::delay(600);
 	flipper.moveVelocity(0);
@@ -567,14 +567,14 @@ void progSkills()
 	pros::delay(200);
 
 	//wall align
-	movePID(-5, 1200);
+	movePID(-5, 1400);
 	gyro.reset();
 	movePID(6.5, 600);
 	gyroPID(-970);
 
 	//get in place to shoot first ball
 	movePID(29, 1500);
-	gyroPID(-910);
+	gyroPID(-895);
 
 	//shoot first ball
 	indexer.moveVelocity(100);
@@ -588,8 +588,8 @@ void progSkills()
 	indexer.moveVelocity(0);
 
 	//get in place to shoot second ball
-	movePID(39, 1800);
-	gyroPID(-910);
+	movePID(41, 1800);
+	gyroPID(-890);
 
 	//shoot second ball
 	indexer.moveVelocity(100);
@@ -601,8 +601,8 @@ void progSkills()
 	movePID(28, 2000);
 
 	//move back to front red tile
-	gyroPID(-1150);
-	movePID(-47, 2000);
+	gyroPID(-1100);
+	movePID(-50, 2000);
 	gyroPID(-70);
 
 	//move up possibly recycled ball
@@ -613,14 +613,16 @@ void progSkills()
 	//get ball
 	movePID(47, 2000);
 
-	//middle column (low + middle) flag
+	//hit center middle flag
 	movePID(-4, 600);
-	gyroPID(-930);
-	movePID(16, 1500);
-	gyroPID(-930);
+	gyroPID(-900);
+	movePID(18, 1500);
+	gyroPID(-900);
 	indexer.moveVelocity(100);
 	pros::delay(750);
 	indexer.moveVelocity(0);
+
+	//hit center bottom flag
 	gyroPID(-1100);
 	movePID(32, 2000);
 
@@ -637,7 +639,7 @@ void progSkills()
 	movePID(3, 200);
 
 	//flip blue front cap
-	gyroPID(-2000);
+	gyroPID(-1995);	//-2000
 	flipper.moveVelocity(100);
 	movePID(-55, 2500);
 	flipper.moveVelocity(-80);
@@ -645,25 +647,26 @@ void progSkills()
 	flipper.moveVelocity(0);
 
 	//shoot possibly recycled ball
-	gyroPID(-900);
-	movePID(-2, 200);		//x
+	gyroPID(-940);
+	movePID(-2, 200);
 	indexer.moveVelocity(100);
 	pros::delay(600);
 
 	//hit low flag
 	gyroPID(-1100);
-	movePID(27, 2000);	//25
-	FW.target = 0;
-	flywheelToggle = 0;
+	movePID(27, 2000);
+	//FW.target = 0;
+	//flywheelToggle = 0;
 	indexer.moveVelocity(0);
 	
 	//move between blue tiles
-	gyroPID(-1350);
-	movePID(-75, 3000);
+	movePID(-4, 800);
+	gyroPID(-1300);
+	movePID(-72, 3000);
  
 	//park
 	gyroPID(-2100);
-	movePID(75, 3500);
+	movePID(80, 3500);
 }
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
