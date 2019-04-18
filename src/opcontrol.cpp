@@ -16,6 +16,12 @@ struct PID FW;
 struct PID GY;
 struct PID DL;
 struct PID DR;
+
+int LIGHT_THRESHHOLD = 2500;
+bool intakeBall = false;
+bool indexerBall = false;
+bool hoodBall = false;
+int taskChoice = 0;
 int indexerToggle = 0;
 int flywheelToggle = 0;
 
@@ -26,14 +32,19 @@ okapi::Motor indexer(9, true, okapi::AbstractMotor::gearset::red);
 okapi::Motor flipper(5, true, okapi::AbstractMotor::gearset::green);
 okapi::ADIGyro gyro1('A', 1);
 okapi::ADIGyro gyro2('B', 1);
+pros::ADILineSensor intakeLS('H');
+pros::ADILineSensor indexerLS('F');
+pros::ADILineSensor hoodLS('E');
 okapi::Controller controller;
 auto chassis = okapi::ChassisControllerFactory::create({1, 12}, {-10, -19}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
 void flywheelTask(void *param);
 void gyroPID(int rotation);
-void movePID(int distanceL, int distanceR, int ms);
+void movePID(double distanceL, double distanceR, int ms);
 void flywheelTask2(void *param);
-int lcdCounter = 0;
+
+
+int lcdCounter = 1;
 
 void opcontrol()
 {
@@ -41,7 +52,7 @@ void opcontrol()
 	FW.target = 0;
 	while (true)
 	{
-		//std::cout << gyro1.getRemapped(359, -359) << " " << gyro2.getRemapped(359, -359) << std::endl;
+		std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
@@ -120,6 +131,35 @@ void flywheelTask2(void *)
 		}
 	}
 }
+void lineTask(void *) {
+	while (true) {
+		intakeBall = intakeLS.get_value() < LIGHT_THRESHHOLD;
+		indexerBall = indexerLS.get_value() < LIGHT_THRESHHOLD;
+		hoodBall = hoodLS.get_value() < LIGHT_THRESHHOLD;
+
+		pros::delay(10);
+	}
+}
+void ballTask(void *) {
+	while (true) {
+		if (taskChoice == 1) {
+			indexer.moveVelocity(0);
+			while (!intakeBall) {
+				pros::delay(10);
+			}
+			indexer.moveVelocity(50);
+			while (!indexerBall) {
+				pros::delay(10);
+			}
+			indexer.moveVelocity(0);
+
+			taskChoice = 0;
+		}
+
+		pros::delay(10);
+	}
+
+}
 void gyroPID(int rotation)
 {
 	GY.target = rotation;
@@ -147,11 +187,11 @@ void gyroPID(int rotation)
 	}
 	chassis.tank(0, 0);
 }
-void movePID(int distanceL, int distanceR, int ms) {
-	int targetL = distanceL * 360 / (2 * 3.1415 * (4.125 / 2));
-	int targetR = distanceR * 360 / (2 * 3.1415 * (4.125 / 2));
-	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00275, 0, 0.0015);
-	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00275, 0, 0.0015);
+void movePID(double distanceL, double distanceR, int ms) {
+	double targetL = distanceL * 360 / (2 * 3.1415 * (4.125 / 2));
+	double targetR = distanceR * 360 / (2 * 3.1415 * (4.125 / 2));
+	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00275, 0.001, 0.0015);
+	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00257, 0.001, 0.0015);
 	
 	chassis.resetSensors();
 
@@ -160,50 +200,30 @@ void movePID(int distanceL, int distanceR, int ms) {
 	double errorR;
 	double powerL;
 	double powerR;
-	double multiplier = 1;
 	while(timer < ms){
-
-		
-		if(targetL < 0 && targetR < 0 && timer < 400) multiplier = 0.5;
-		else {
-			if(multiplier < 1){
-				multiplier += 0.1;
-			}
-		}
 
 		errorL = targetL - chassis.getSensorVals()[0];
 		errorR = targetR - chassis.getSensorVals()[1];
 		powerL = drivePIDL.step(errorL);
 		powerR = drivePIDR.step(errorR);
-		
-		if(powerL > 1) powerL = 1;
-		if(powerR > 1) powerL = 1;
-		if(powerL < -1) powerL = -1;
-		if(powerR < -1) powerR = -1;
+		chassis.tank(-powerL, -powerR);
+		//std::cout << errorL << " " << errorR << std::endl;
 
-		powerL *= multiplier;
-		powerR *= multiplier;
-
-		chassis.tank(-powerL, -powerR);	//second is powerR
-		//std::cout << powerL << " " << powerR << std::endl;
-
-		pros::delay(20);
-
-		timer += 20;
+		pros::delay(10);
+		timer += 10;
 	}
+	
+	chassis.tank(0, 0);
 }
 
 /*______________________________________________________________________________________________________________________________________________________________________________*/
 
 void blueFront();
 void redFront();
+void blueBack();
+void redBack();
 void blueBackTrap();
 void redBackTrap();
-void blueVasanth();
-void redMeghaj();
-void blueBackPark();
-void redBackPark();
-void progSkills();
 
 void autonomous()
 {
@@ -216,55 +236,75 @@ void autonomous()
 		redFront();
 		break;
 	case 3:
-		blueBackTrap();
+		blueBack();
 		break;
 	case 4:
-		redBackTrap();
+		redBack();
 		break;
 	case 5:
-		blueVasanth();
+		blueBackTrap();
 		break;
 	case 6:
-		redMeghaj();
-		break;
-	case 7:
-		blueBackPark();
-		break;
-	case 8:
-		redBackPark();
-		break;
-	case 9:
-		progSkills();
+		redBackTrap();
 		break;
 	}
 }
 
-
 void blueFront()
 {
+	//setup
+	FW.target = 2500;
+	flywheelToggle = 2;
+
+	//intake ball from under cap
+	taskChoice = 1;
+	movePID(34, 34, 1400);
+
+	//move to shooting position at blue tile
+	movePID(-35, -35, 1500);
+	movePID(10.5, -10.5, 1000);
+	movePID(-3, -3, 500);
+
+	//shoot balls
+	indexer.moveVelocity(200);
+	pros::delay(600);
+
+	//hit bottom flag
+	movePID(2, -2, 600);
+	movePID(34, 34, 1400);
+	flipper.moveVelocity(-200);
+	pros::delay(300);
+	flipper.moveVelocity(200);
+	pros::delay(400);
+	flipper.moveVelocity(0);
+	indexer.moveVelocity(0);
+
+	//flip front cap
+	movePID(-24, -24, 1200);
+	movePID(-7.5, 7.5, 600);
+	movePID(12, 12, 1000);
+	
+	taskChoice = 1;
+	flipper.moveVelocity(-200);
+	pros::delay(1000);
+	flipper.moveVelocity(0);
+	movePID(-6, -6, 1500);
 }
 void redFront()
 {
 }
+
+void blueBack() {
+
+}
+void redBack() {
+
+}
+
 void blueBackTrap()
 {
 }
 void redBackTrap()
-{
-}
-void blueVasanth()
-{	
-}
-void redMeghaj()
-{
-}
-void blueBackPark() 
-{
-}
-void redBackPark() 
-{
-}
-void progSkills()
 {
 }
 
@@ -296,9 +336,9 @@ void right_button()
 	if (!selected)
 	{
 		lcdCounter++;
-		if (lcdCounter > 9)
+		if (lcdCounter > 6)
 		{
-			lcdCounter = 9;
+			lcdCounter = 6;
 		}
 	}
 }
@@ -311,19 +351,13 @@ std::string convert(int arg)
 	case 2:
 		return "Red Front";
 	case 3:
-		return "Blue Back Trap";
+		return "Blue Back";
 	case 4:
-		return "Red Back Trap";
+		return "Red Back";
 	case 5:
-		return "Vasanth Blue";
+		return "Blue Back Trap";
 	case 6:
-		return "Meghaj Red";
-	case 7:
-		return "Blue Back Park";
-	case 8:
-		return "Red Back Park";
-	case 9:
-		return "Prog Skills";
+		return "Red Back Trap";
 	default:
 		return "No Auton";
 	}
@@ -341,8 +375,11 @@ void initialize()
 	pros::lcd::register_btn0_cb(left_button);
 	pros::lcd::register_btn1_cb(center_button);
 	pros::lcd::register_btn2_cb(right_button);
-
 	
+	intakeLS.calibrate();
+	indexerLS.calibrate();
+	hoodLS.calibrate();
+
 	while (!selected)
 	{
 		pros::lcd::set_text(0, convert(lcdCounter));
@@ -354,6 +391,8 @@ void initialize()
 
 	pros::Task flywheelTaskHandle(flywheelTask);
 	pros::Task flywheelTask2Handle(flywheelTask2);
+	pros::Task lineTaskHandle(lineTask);
+	pros::Task ballTaskHandle(ballTask);
 }
 
 /**
