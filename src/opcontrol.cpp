@@ -1,4 +1,5 @@
 #include "main.h"
+//test
 struct PID
 {
 	float kP;
@@ -292,6 +293,19 @@ void blueFront()
 }
 void redFront()
 {
+	//setup
+	FW.target = 2500; 
+	flywheelToggle = 2; 
+
+	//intake ball from under cap
+	taskChoice = 1; 
+	movePID(34, 34,  1400); 
+
+	//move to shooting position on red tile
+	
+	
+	//back
+
 }
 
 void blueBack() {
