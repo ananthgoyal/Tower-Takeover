@@ -200,7 +200,7 @@ void collectorPID(int deg)
 	while (CT.error <= 10)
 	{
 		CT.kP = 0.1;
-		CT.kD = 0;
+		CT.kD = 0.01;
 		CT.kI = 0;
 		CT.sensor = potCollector.get_value(); 
 		//std::cout << "POS: " << GY.sensor << std::endl;
@@ -216,7 +216,11 @@ void collectorPID(int deg)
 		pros::delay(20);
 	}
 	//need to figure out how to hold flipper in place
-	flipper.moveVelocity(0); 
+	while(true)
+	{
+		flipper.moveVelocity(-1); 
+		flipper.moveVelocity(1);
+	}
 }
 
 void movePID(double distanceL, double distanceR, int ms) {
