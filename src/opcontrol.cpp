@@ -12,11 +12,12 @@ struct PID
 	float speed;
 	float target;
 	float sensor;
-};
-struct PID FW;
-struct PID GY;
-struct PID DL;
-struct PID DR;
+} typedef pid_t;
+pid_t FW;
+pid_t GY;
+pid_t DL;
+pid_t DR;
+pid_t CT; 
 
 int LIGHT_THRESHHOLD = 2500;
 bool intakeBall = false;
@@ -35,7 +36,7 @@ okapi::ADIGyro gyro1('A', 1);
 okapi::ADIGyro gyro2('B', 1);
 pros::ADILineSensor intakeLS('H');
 pros::ADILineSensor indexerLS('F');
-pros::ADILineSensor hoodLS('E');
+pros::ADIPotentiometer potCollector('E'); 
 okapi::Controller controller;
 auto chassis = okapi::ChassisControllerFactory::create({1, 12}, {-10, -19}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
@@ -43,6 +44,7 @@ void flywheelTask(void *param);
 void gyroPID(int rotation);
 void movePID(double distanceL, double distanceR, int ms);
 void flywheelTask2(void *param);
+void collectorPID(int deg); 
 
 
 int lcdCounter = 1;
@@ -188,6 +190,35 @@ void gyroPID(int rotation)
 	}
 	chassis.tank(0, 0);
 }
+
+void collectorPID(int deg)
+{
+	CT.target = deg;
+	//gyro2.reset();
+	CT.integral = 0;
+	//bool val = false;
+	int timer = 0;
+	while (timer < 50)
+	{
+		CT.kP = 0.1;
+		CT.kD = 0.05;
+		CT.kI = 0;
+		CT.sensor = potCollector.get(); 
+		//std::cout << "POS: " << GY.sensor << std::endl;
+		CT.error = CT.target - CT.sensor;
+		CT.derivative = CT.error - CT.previous_error;
+		CT.integral += CT.error;
+		CT.previous_error = CT.error;
+		CT.speed = (CT.kP * CT.error + CT.kD * CT.derivative + CT.kI * CT.integral); 
+
+		
+		flipper.moveVelocity(CT.speed); 
+		timer++;
+		pros::delay(20);
+	}
+	flipper.moveVelocity(0); 
+}
+
 void movePID(double distanceL, double distanceR, int ms) {
 	double targetL = distanceL * 360 / (2 * 3.1415 * (4.125 / 2));
 	double targetR = distanceR * 360 / (2 * 3.1415 * (4.125 / 2));
