@@ -193,7 +193,7 @@ void movePID(double distanceL, double distanceR, int ms) {
 	double targetR = distanceR * 360 / (2 * 3.1415 * (4.125 / 2));
 	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00275, 0.001, 0.0015);
 	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00257, 0.001, 0.0015);
-	
+
 	chassis.resetSensors();
 
 	int timer = 0;
@@ -213,7 +213,7 @@ void movePID(double distanceL, double distanceR, int ms) {
 		pros::delay(10);
 		timer += 10;
 	}
-	
+
 	chassis.tank(0, 0);
 }
 
@@ -284,7 +284,7 @@ void blueFront()
 	movePID(-24, -24, 1200);
 	movePID(-7.5, 7.5, 600);
 	movePID(12, 12, 1000);
-	
+
 	taskChoice = 1;
 	flipper.moveVelocity(-200);
 	pros::delay(1000);
@@ -319,16 +319,16 @@ void blueFront()
 void redFront()
 {
 	//setup
-	FW.target = 2500; 
-	flywheelToggle = 2; 
+	FW.target = 2500;
+	flywheelToggle = 2;
 
 	//intake ball from under cap
-	taskChoice = 1; 
-	movePID(34, 34,  1400); 
+	taskChoice = 1;
+	movePID(34, 34,  1400);
 
 	//move to shooting position on red tile
-	
-	
+
+
 	//back
 
 }
@@ -414,7 +414,7 @@ void initialize()
 	pros::lcd::register_btn0_cb(left_button);
 	pros::lcd::register_btn1_cb(center_button);
 	pros::lcd::register_btn2_cb(right_button);
-	
+
 	intakeLS.calibrate();
 	indexerLS.calibrate();
 	hoodLS.calibrate();
@@ -424,7 +424,7 @@ void initialize()
 		pros::lcd::set_text(0, convert(lcdCounter));
 		pros::delay(20);
 	}
-	
+
 
 	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
 
