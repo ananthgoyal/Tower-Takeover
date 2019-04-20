@@ -1,4 +1,5 @@
 #include "main.h"
+
 struct PID
 {
 	float kP;
@@ -54,11 +55,11 @@ void opcontrol()
 	FW.target = 0;
 	while (true)
 	{
-		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
+		/*std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
-
+		*/
 		pros::delay(20);
 	}
 }
@@ -196,7 +197,7 @@ void collectorPID(int deg)
 	//gyro2.reset();
 	CT.integral = 0;
 	//bool val = false;
-	//int timer = 0;
+	int timer = 0;
 	while (CT.error <= 10)
 	{
 		CT.kP = 0.1;
@@ -212,10 +213,15 @@ void collectorPID(int deg)
 
 		
 		flipper.moveVelocity(CT.speed); 
-		//timer++;
+		timer++;
 		pros::delay(20);
 	}
+<<<<<<< HEAD
 	//need to figure out how to hold flipper in place
+=======
+
+	//moveVelocity();
+>>>>>>> 8c3e457cf3cbf773707df8fc3c1f93df3dcde7d8
 	while(true)
 	{
 		flipper.moveVelocity(-1); 
@@ -318,35 +324,31 @@ void blueFront()
 	//flip front cap
 	movePID(-24, -24, 1200);
 	movePID(-7.5, 7.5, 600);
-	movePID(12, 12, 1000);
+	movePID(10, 10, 1000);
 
 	taskChoice = 1;
-	flipper.moveVelocity(-200);
+	collectorPID(900);
 	pros::delay(1000);
 	flipper.moveVelocity(0);
-	movePID(-6, -6, 1500);
+	movePID(-6, -6, 2000);
+	pros::delay(5000);
 
 	/*
     //setup
     FW.target = 2500;
     flywheelToggle = 2;
-
     //intake ball from under cap
     taskChoice = 1;
     movePID(34, 34, 1400);
     movePID(-3, -3, 1400);
     movePID(-8.5, 8.5, 800);
-
     flipper.moveVelocity(-200);
     pros::delay(600);
     flipper.moveVelocity(0);
-
     movePID(7.5, 7.5, 1000);
-
     flipper.moveVelocity(200);
     pros::delay(800);
     flipper.moveVelocity(0);
-
     movePID(20, -20, 2000);
 */
 
@@ -440,7 +442,7 @@ void initialize()
 
 	intakeLS.calibrate();
 	indexerLS.calibrate();
-	//drLS.calibrate();
+	//hoodLS.calibrate();
 
 	while (!selected)
 	{
