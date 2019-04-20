@@ -290,6 +290,31 @@ void blueFront()
 	pros::delay(1000);
 	flipper.moveVelocity(0);
 	movePID(-6, -6, 1500);
+
+	/*
+    //setup
+    FW.target = 2500;
+    flywheelToggle = 2;
+
+    //intake ball from under cap
+    taskChoice = 1;
+    movePID(34, 34, 1400);
+    movePID(-3, -3, 1400);
+    movePID(-8.5, 8.5, 800);
+
+    flipper.moveVelocity(-200);
+    pros::delay(600);
+    flipper.moveVelocity(0);
+
+    movePID(7.5, 7.5, 1000);
+
+    flipper.moveVelocity(200);
+    pros::delay(800);
+    flipper.moveVelocity(0);
+
+    movePID(20, -20, 2000);
+*/
+
 }
 void redFront()
 {
