@@ -11,17 +11,17 @@ struct PID
 	float speed;
 	float target;
 	float sensor;
-} typedef pid_t;
-pid_t FW;
-pid_t GY;
-pid_t DL;
-pid_t DR;
-pid_t CT; 
+};
+struct PID FW;
+struct PID GY;
+struct PID DL;
+struct PID DR;
+struct PID CT; 
 
 int LIGHT_THRESHHOLD = 2500;
 bool intakeBall = false;
 bool indexerBall = false;
-bool hoodBall = false;
+//bool hoodBall = false;
 int taskChoice = 0;
 int indexerToggle = 0;
 int flywheelToggle = 0;
@@ -54,7 +54,7 @@ void opcontrol()
 	FW.target = 0;
 	while (true)
 	{
-		std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
+		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
@@ -137,7 +137,7 @@ void lineTask(void *) {
 	while (true) {
 		intakeBall = intakeLS.get_value() < LIGHT_THRESHHOLD;
 		indexerBall = indexerLS.get_value() < LIGHT_THRESHHOLD;
-		hoodBall = hoodLS.get_value() < LIGHT_THRESHHOLD;
+		//hoodBall = hoodLS.get_value() < LIGHT_THRESHHOLD;
 
 		pros::delay(10);
 	}
@@ -196,13 +196,13 @@ void collectorPID(int deg)
 	//gyro2.reset();
 	CT.integral = 0;
 	//bool val = false;
-	int timer = 0;
-	while (timer < 50)
+	//int timer = 0;
+	while (CT.error <= 10)
 	{
 		CT.kP = 0.1;
-		CT.kD = 0.05;
+		CT.kD = 0;
 		CT.kI = 0;
-		CT.sensor = potCollector.get(); 
+		CT.sensor = potCollector.get_value(); 
 		//std::cout << "POS: " << GY.sensor << std::endl;
 		CT.error = CT.target - CT.sensor;
 		CT.derivative = CT.error - CT.previous_error;
@@ -212,9 +212,10 @@ void collectorPID(int deg)
 
 		
 		flipper.moveVelocity(CT.speed); 
-		timer++;
+		//timer++;
 		pros::delay(20);
 	}
+	//need to figure out how to hold flipper in place
 	flipper.moveVelocity(0); 
 }
 
@@ -348,18 +349,6 @@ void blueFront()
 }
 void redFront()
 {
-	//setup
-	FW.target = 2500;
-	flywheelToggle = 2;
-
-	//intake ball from under cap
-	taskChoice = 1;
-	movePID(34, 34,  1400);
-
-	//move to shooting position on red tile
-
-
-	//back
 
 }
 
@@ -447,7 +436,7 @@ void initialize()
 
 	intakeLS.calibrate();
 	indexerLS.calibrate();
-	hoodLS.calibrate();
+	//drLS.calibrate();
 
 	while (!selected)
 	{
