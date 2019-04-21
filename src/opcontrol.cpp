@@ -1,4 +1,5 @@
 #include "main.h"
+using namespace okapi; 
 struct PID
 {
 	float kP;
@@ -56,9 +57,9 @@ void opcontrol()
 	while (true)
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
-		chassis.arcade(controller.getAnalog(okapi::ControllerAnalog::leftY), controller.getAnalog(okapi::ControllerAnalog::rightX));
-		indexer.moveVelocity(200 * controller.getDigital(okapi::ControllerDigital::L1) - 200 * controller.getDigital(okapi::ControllerDigital::L2));
-		flipper.moveVelocity(200 * controller.getDigital(okapi::ControllerDigital::up) - 200 * controller.getDigital(okapi::ControllerDigital::down));
+		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
+		indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
+		flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
 		
 		pros::delay(20);
 	}
@@ -81,7 +82,7 @@ void flywheelTask(void *)
 		FW.previous_error = FW.error;
 		FW.speed = FW.kP * FW.error + FW.kD * FW.derivative + FW.kI * FW.integral;
 
-		if (controller.getDigital(okapi::ControllerDigital::R2))
+		if (controller.getDigital(ControllerDigital::R2))
 		{
 			FW.speed = -0.75;
 		}
@@ -104,7 +105,7 @@ void flywheelTask2(void *)
 {
 	while (true)
 	{
-		if (controller.getDigital(okapi::ControllerDigital::R1))
+		if (controller.getDigital(ControllerDigital::R1))
 		{
 			pros::delay(20);
 			flywheelToggle++;
@@ -126,7 +127,7 @@ void flywheelTask2(void *)
 				break;
 			}
 
-			while (controller.getDigital(okapi::ControllerDigital::R1))
+			while (controller.getDigital(ControllerDigital::R1))
 			{
 				pros::delay(20);
 			}
