@@ -14,16 +14,17 @@ struct PID
 	float sensor;
 };
 
-struct PID FW;
-struct PID GY;
-struct PID DL;
-struct PID DR;
-struct PID CT; 
+typedef struct PID pid; 
+
+pid FW;
+pid GY;
+pid DL;
+pid DR;
+pid CT; 
 
 int LIGHT_THRESHHOLD = 2500;
 bool intakeBall = false;
 bool indexerBall = false;
-//bool hoodBall = false;
 int taskChoice = 0;
 int indexerToggle = 0;
 int flywheelToggle = 0;
