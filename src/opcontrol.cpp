@@ -1,5 +1,5 @@
 #include "main.h"
-
+using namespace okapi; 
 struct PID
 {
 	float kP;
@@ -13,6 +13,7 @@ struct PID
 	float target;
 	float sensor;
 };
+
 struct PID FW;
 struct PID GY;
 struct PID DL;
@@ -194,11 +195,7 @@ void gyroPID(int rotation)
 void collectorPID(int deg)
 {
 	CT.target = deg;
-	//gyro2.reset();
 	CT.integral = 0;
-	//bool val = false;
-	int timer = 0;
-	//minimal error
 	while (CT.error <= 10)
 	{
 		CT.kP = 0.1;
@@ -213,7 +210,6 @@ void collectorPID(int deg)
 		//speed calculation
 		CT.speed = (CT.kP * CT.error + CT.kD * CT.derivative + CT.kI * CT.integral); 
 		flipper.moveVelocity(CT.speed); 
-		timer++;
 		pros::delay(20);
 	}
 
