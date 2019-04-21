@@ -1,5 +1,9 @@
 #include "main.h"
+<<<<<<< HEAD
 
+=======
+//test
+>>>>>>> refs/remotes/origin/master
 struct PID
 {
 	float kP;
@@ -13,17 +17,27 @@ struct PID
 	float target;
 	float sensor;
 };
+<<<<<<< HEAD
 
+=======
+>>>>>>> refs/remotes/origin/master
 struct PID FW;
 struct PID GY;
 struct PID DL;
 struct PID DR;
+<<<<<<< HEAD
 struct PID CT; 
+=======
+>>>>>>> refs/remotes/origin/master
 
 int LIGHT_THRESHHOLD = 2500;
 bool intakeBall = false;
 bool indexerBall = false;
+<<<<<<< HEAD
 //bool hoodBall = false;
+=======
+bool hoodBall = false;
+>>>>>>> refs/remotes/origin/master
 int taskChoice = 0;
 int indexerToggle = 0;
 int flywheelToggle = 0;
@@ -37,7 +51,11 @@ okapi::ADIGyro gyro1('A', 1);
 okapi::ADIGyro gyro2('B', 1);
 pros::ADILineSensor intakeLS('H');
 pros::ADILineSensor indexerLS('F');
+<<<<<<< HEAD
 pros::ADIPotentiometer potCollector('E'); 
+=======
+pros::ADILineSensor hoodLS('E');
+>>>>>>> refs/remotes/origin/master
 okapi::Controller controller;
 auto chassis = okapi::ChassisControllerFactory::create({1, 12}, {-10, -19}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
@@ -45,7 +63,10 @@ void flywheelTask(void *param);
 void gyroPID(int rotation);
 void movePID(double distanceL, double distanceR, int ms);
 void flywheelTask2(void *param);
+<<<<<<< HEAD
 void collectorPID(int deg); 
+=======
+>>>>>>> refs/remotes/origin/master
 
 
 int lcdCounter = 1;
@@ -56,11 +77,19 @@ void opcontrol()
 	FW.target = 0;
 	while (true)
 	{
+<<<<<<< HEAD
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(okapi::ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
 		
+=======
+		std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
+		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
+		indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
+		flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
+
+>>>>>>> refs/remotes/origin/master
 		pros::delay(20);
 	}
 }
@@ -139,7 +168,11 @@ void lineTask(void *) {
 	while (true) {
 		intakeBall = intakeLS.get_value() < LIGHT_THRESHHOLD;
 		indexerBall = indexerLS.get_value() < LIGHT_THRESHHOLD;
+<<<<<<< HEAD
 		//hoodBall = hoodLS.get_value() < LIGHT_THRESHHOLD;
+=======
+		hoodBall = hoodLS.get_value() < LIGHT_THRESHHOLD;
+>>>>>>> refs/remotes/origin/master
 
 		pros::delay(10);
 	}
@@ -191,6 +224,7 @@ void gyroPID(int rotation)
 	}
 	chassis.tank(0, 0);
 }
+<<<<<<< HEAD
 
 void collectorPID(int deg)
 {
@@ -226,6 +260,8 @@ void collectorPID(int deg)
 	}
 }
 
+=======
+>>>>>>> refs/remotes/origin/master
 void movePID(double distanceL, double distanceR, int ms) {
 	double targetL = distanceL * 360 / (2 * 3.1415 * (4.125 / 2));
 	double targetR = distanceR * 360 / (2 * 3.1415 * (4.125 / 2));
@@ -321,6 +357,7 @@ void blueFront()
 	//flip front cap
 	movePID(-24, -24, 1200);
 	movePID(-7.5, 7.5, 600);
+<<<<<<< HEAD
 	movePID(10, 10, 1000);
 
 	taskChoice = 1;
@@ -330,16 +367,30 @@ void blueFront()
 	flipper.moveVelocity(0);
 	movePID(-6, -6, 2000);
 	pros::delay(5000);
+=======
+	movePID(12, 12, 1000);
+
+	taskChoice = 1;
+	flipper.moveVelocity(-200);
+	pros::delay(1000);
+	flipper.moveVelocity(0);
+	movePID(-6, -6, 1500);
+>>>>>>> refs/remotes/origin/master
 
 	/*
     //setup
     FW.target = 2500;
     flywheelToggle = 2;
+<<<<<<< HEAD
+=======
+
+>>>>>>> refs/remotes/origin/master
     //intake ball from under cap
     taskChoice = 1;
     movePID(34, 34, 1400);
     movePID(-3, -3, 1400);
     movePID(-8.5, 8.5, 800);
+<<<<<<< HEAD
     flipper.moveVelocity(-200);
     pros::delay(600);
     flipper.moveVelocity(0);
@@ -347,12 +398,40 @@ void blueFront()
     flipper.moveVelocity(200);
     pros::delay(800);
     flipper.moveVelocity(0);
+=======
+
+    flipper.moveVelocity(-200);
+    pros::delay(600);
+    flipper.moveVelocity(0);
+
+    movePID(7.5, 7.5, 1000);
+
+    flipper.moveVelocity(200);
+    pros::delay(800);
+    flipper.moveVelocity(0);
+
+>>>>>>> refs/remotes/origin/master
     movePID(20, -20, 2000);
 */
 
 }
 void redFront()
 {
+<<<<<<< HEAD
+=======
+	//setup
+	FW.target = 2500;
+	flywheelToggle = 2;
+
+	//intake ball from under cap
+	taskChoice = 1;
+	movePID(34, 34,  1400);
+
+	//move to shooting position on red tile
+
+
+	//back
+>>>>>>> refs/remotes/origin/master
 
 }
 
@@ -440,7 +519,11 @@ void initialize()
 
 	intakeLS.calibrate();
 	indexerLS.calibrate();
+<<<<<<< HEAD
 	//hoodLS.calibrate();
+=======
+	hoodLS.calibrate();
+>>>>>>> refs/remotes/origin/master
 
 	while (!selected)
 	{
@@ -473,4 +556,8 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
+<<<<<<< HEAD
 void competitionitialize() {}
+=======
+void competitionitialize() {}
+>>>>>>> refs/remotes/origin/master
