@@ -1,12 +1,9 @@
 #include "main.h"
-//added this
 using namespace okapi; 
 struct PID
 {
 	float kP;
 	float kI;
-	float kD;
-	float error;
 	float integral;
 	float derivative;
 	float previous_error;
@@ -203,7 +200,6 @@ void collectorPID(int deg)
 		CT.kD = 0.01;
 		CT.kI = 0;
 		CT.sensor = potCollector.get_value(); 
-		//std::cout << "POS: " << GY.sensor << std::endl;
 		CT.error = CT.target - CT.sensor;
 		CT.derivative = CT.error - CT.previous_error;
 		CT.integral += CT.error;
