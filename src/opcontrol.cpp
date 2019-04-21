@@ -4,6 +4,7 @@ struct PID
 {
 	float kP;
 	float kI;
+	float kD;
 	float integral;
 	float derivative;
 	float previous_error;
