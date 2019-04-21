@@ -7,6 +7,7 @@ struct PID
 	float kD;
 	float integral;
 	float derivative;
+	float error;
 	float previous_error;
 	float speed;
 	float target;
