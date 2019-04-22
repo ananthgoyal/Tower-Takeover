@@ -207,7 +207,6 @@ void collectorPID(int deg)
 		CT.derivative = CT.error - CT.previous_error;
 		CT.integral += CT.error;
 		CT.previous_error = CT.error;
-		//speed calculation
 		CT.speed = (CT.kP * CT.error + CT.kD * CT.derivative + CT.kI * CT.integral); 
 		flipper.moveVelocity(CT.speed); 
 		pros::delay(20);
@@ -348,14 +347,13 @@ void blueFront()
 }
 void redFront()
 {
-
 }
 
-void blueBack() {
-
+void blueBack() 
+{
 }
-void redBack() {
-
+void redBack() 
+{
 }
 
 void blueBackTrap()
