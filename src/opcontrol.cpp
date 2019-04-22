@@ -214,13 +214,11 @@ void collectorPID(int deg)
 		pros::delay(20);
 		
 	}
-	timer = 0; 
 	//keeps flipper at constant placement
-	while(timer < 20)
+	for(int i = 0; i < 20; i++)
 	{
 		flipper.moveVelocity(-1); 
 		flipper.moveVelocity(1);
-		timer++; 
 	}
 }
 
@@ -288,7 +286,6 @@ void autonomous()
 void blueFront()
 {
 
-	//collectorPID(1350);
 	//setup
 	FW.target = 2500;
 	flywheelToggle = 2;
@@ -322,19 +319,24 @@ void blueFront()
 	movePID(12.5, 12.5, 1200);
 
 	taskChoice = 1;
-	//still need more fixing below:
+	//reach past cap
 	collectorPID(1350);
 	pros::delay(1000);
-	//flipper.moveVelocity(0);
+	//collect balls
 	movePID(-10, -10, 2000);
+	//flip up to reset
 	flipper.moveVelocity(200);
 	pros::delay(300); 
+	//flip down below cap
 	flipper.moveVelocity(-170); 
 	pros::delay(300);
 	flipper.moveVelocity(0);
+	//move beneath cap
 	movePID(11,11,1500);
+	//flip cap
 	flipper.moveVelocity(200);
 	pros::delay(250);
+	//adjust for second double shot
 	movePID(-2,2,300);
 	indexer.moveVelocity(200);
 	pros::delay(6000);
