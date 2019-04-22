@@ -197,7 +197,8 @@ void collectorPID(int deg)
 {
 	CT.target = deg;
 	CT.integral = 0;
-	while (CT.error <= 10)
+	int timer = 0; 
+	while (timer < 50)
 	{
 		CT.kP = 0.1;
 		CT.kD = 0.01;
@@ -209,14 +210,17 @@ void collectorPID(int deg)
 		CT.previous_error = CT.error;
 		CT.speed = (CT.kP * CT.error + CT.kD * CT.derivative + CT.kI * CT.integral); 
 		flipper.moveVelocity(CT.speed); 
+		timer++;
 		pros::delay(20);
+		
 	}
-
+	timer = 0; 
 	//keeps flipper at constant placement
-	while(true)
+	while(timer < 20)
 	{
 		flipper.moveVelocity(-1); 
 		flipper.moveVelocity(1);
+		timer++; 
 	}
 }
 
@@ -248,8 +252,6 @@ void movePID(double distanceL, double distanceR, int ms) {
 
 	chassis.tank(0, 0);
 }
-
-/*______________________________________________________________________________________________________________________________________________________________________________*/
 
 void blueFront();
 void redFront();
@@ -285,6 +287,8 @@ void autonomous()
 
 void blueFront()
 {
+
+	//collectorPID(1350);
 	//setup
 	FW.target = 2500;
 	flywheelToggle = 2;
@@ -313,17 +317,27 @@ void blueFront()
 	indexer.moveVelocity(0);
 
 	//flip front cap
-	movePID(-24, -24, 1200);
-	movePID(-7.5, 7.5, 600);
-	movePID(10, 10, 1000);
+	movePID(-27.5, -27.5, 1250);
+	movePID(-6.5, 6.5, 600);
+	movePID(12.5, 12.5, 1200);
 
 	taskChoice = 1;
 	//still need more fixing below:
-	collectorPID(900);
+	collectorPID(1350);
 	pros::delay(1000);
+	//flipper.moveVelocity(0);
+	movePID(-10, -10, 2000);
+	flipper.moveVelocity(200);
+	pros::delay(300); 
+	flipper.moveVelocity(-170); 
+	pros::delay(300);
 	flipper.moveVelocity(0);
-	movePID(-6, -6, 2000);
-	pros::delay(5000);
+	movePID(11,11,1500);
+	flipper.moveVelocity(200);
+	pros::delay(250);
+	movePID(-2,2,300);
+	indexer.moveVelocity(200);
+	pros::delay(6000);
 
 	/*
     //setup
