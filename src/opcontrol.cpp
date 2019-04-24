@@ -25,9 +25,13 @@ pid CT;
 int LIGHT_THRESHHOLD = 2500;
 bool intakeBall = false;
 bool indexerBall = false;
+bool backwards = false; 
 int taskChoice = 0;
 int indexerToggle = 0;
 int flywheelToggle = 0;
+int deg = 4095;
+bool hold = false; 
+bool taskBreak = false;
 
 okapi::Motor flywheelTop(2, true, okapi::AbstractMotor::gearset::green);
 okapi::Motor flywheelBot(3, false, okapi::AbstractMotor::gearset::green);
@@ -40,7 +44,7 @@ pros::ADILineSensor intakeLS('H');
 pros::ADILineSensor indexerLS('F');
 pros::ADIPotentiometer potCollector('E'); 
 okapi::Controller controller;
-auto chassis = okapi::ChassisControllerFactory::create({1, 12}, {-10, -19}, okapi::AbstractMotor::gearset::green, {4.125, 10});
+auto chassis = okapi::ChassisControllerFactory::create({1, 12}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
 void flywheelTask(void *param);
 void gyroPID(int rotation);
@@ -49,18 +53,20 @@ void flywheelTask2(void *param);
 void collectorPID(int deg); 
 
 
-int lcdCounter = 1;
+int lcdCounter = 3;
 
 void opcontrol()
 {
 	flywheelToggle = 0;
 	FW.target = 0;
+	backwards = false; 
+	hold = false;
 	while (true)
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
+		//flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
 		
 		pros::delay(20);
 	}
@@ -83,7 +89,7 @@ void flywheelTask(void *)
 		FW.previous_error = FW.error;
 		FW.speed = FW.kP * FW.error + FW.kD * FW.derivative + FW.kI * FW.integral;
 
-		if (controller.getDigital(ControllerDigital::R2))
+		if (controller.getDigital(ControllerDigital::R2) || backwards)
 		{
 			FW.speed = -0.75;
 		}
@@ -149,16 +155,17 @@ void ballTask(void *) {
 	while (true) {
 		if (taskChoice == 1) {
 			indexer.moveVelocity(0);
-			while (!intakeBall) {
+			while (!intakeBall && !taskBreak) {
 				pros::delay(10);
 			}
 			indexer.moveVelocity(50);
-			while (!indexerBall) {
+			while (!indexerBall && !taskBreak) {
 				pros::delay(10);
 			}
 			indexer.moveVelocity(0);
 
 			taskChoice = 0;
+			taskBreak = false;
 		}
 
 		pros::delay(10);
@@ -193,13 +200,11 @@ void gyroPID(int rotation)
 	chassis.tank(0, 0);
 }
 
-void collectorPID(int deg)
+void collectorPID(void *)
 {
-	CT.target = deg;
-	CT.integral = 0;
-	int timer = 0; 
-	while (timer < 50)
+	while (true)
 	{
+		CT.target = deg;
 		CT.kP = 0.1;
 		CT.kD = 0.01;
 		CT.kI = 0;
@@ -208,17 +213,11 @@ void collectorPID(int deg)
 		CT.derivative = CT.error - CT.previous_error;
 		CT.integral += CT.error;
 		CT.previous_error = CT.error;
-		CT.speed = (CT.kP * CT.error + CT.kD * CT.derivative + CT.kI * CT.integral); 
+		CT.speed = hold ? (CT.kP * CT.error + CT.kD * CT.derivative + CT.kI * CT.integral) : 200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down); 
 		flipper.moveVelocity(CT.speed); 
-		timer++;
+		//timer++;
 		pros::delay(20);
 		
-	}
-	//keeps flipper at constant placement
-	for(int i = 0; i < 20; i++)
-	{
-		flipper.moveVelocity(-1); 
-		flipper.moveVelocity(1);
 	}
 }
 
@@ -285,7 +284,8 @@ void autonomous()
 
 void blueFront()
 {
-
+	
+	
 	//setup
 	FW.target = 2500;
 	flywheelToggle = 2;
@@ -297,6 +297,8 @@ void blueFront()
 	//move to shooting position at blue tile
 	movePID(-35, -35, 1500);
 	movePID(10.5, -10.5, 1000);
+	hold = true; 
+	deg = 2500; 
 	movePID(-3, -3, 500);
 
 	//shoot balls
@@ -306,59 +308,25 @@ void blueFront()
 	//hit bottom flag
 	movePID(2, -2, 600);
 	movePID(34, 34, 1400);
-	flipper.moveVelocity(-200);
-	pros::delay(300);
-	flipper.moveVelocity(200);
-	pros::delay(400);
-	flipper.moveVelocity(0);
 	indexer.moveVelocity(0);
 
 	//flip front cap
 	movePID(-27.5, -27.5, 1250);
 	movePID(-6.5, 6.5, 600);
 	movePID(12.5, 12.5, 1200);
-
 	taskChoice = 1;
+
 	//reach past cap
-	collectorPID(1350);
+	hold = true; 
+	deg = 1300; 
 	pros::delay(1000);
-	//collect balls
-	movePID(-10, -10, 2000);
-	//flip up to reset
-	flipper.moveVelocity(200);
-	pros::delay(300); 
-	//flip down below cap
-	flipper.moveVelocity(-170); 
-	pros::delay(300);
-	flipper.moveVelocity(0);
-	//move beneath cap
-	movePID(11,11,1500);
-	//flip cap
-	flipper.moveVelocity(200);
-	pros::delay(250);
-	//adjust for second double shot
-	movePID(-2,2,300);
+	movePID(-4,-4,1000);
+	movePID(-3.1,3.1,500);
+	taskBreak = true;
+	hold = false;
+	pros::delay(30);
 	indexer.moveVelocity(200);
 	pros::delay(6000);
-
-	/*
-    //setup
-    FW.target = 2500;
-    flywheelToggle = 2;
-    //intake ball from under cap
-    taskChoice = 1;
-    movePID(34, 34, 1400);
-    movePID(-3, -3, 1400);
-    movePID(-8.5, 8.5, 800);
-    flipper.moveVelocity(-200);
-    pros::delay(600);
-    flipper.moveVelocity(0);
-    movePID(7.5, 7.5, 1000);
-    flipper.moveVelocity(200);
-    pros::delay(800);
-    flipper.moveVelocity(0);
-    movePID(20, -20, 2000);
-*/
 
 }
 void redFront()
@@ -367,6 +335,30 @@ void redFront()
 
 void blueBack() 
 {
+	//setup
+	FW.target = 2500;
+	flywheelToggle = 2;
+
+	//intake ball from under cap
+	taskChoice = 1;
+	movePID(34, 34, 1400);	
+	movePID(-4, -4, 500);
+	pros::delay(1000);
+	movePID(-8, 8, 800);
+	FW.target = 0;
+	flywheelToggle = 0;
+	hold = true; 
+	deg = 1000; 
+	pros::delay(1000);
+	movePID(8, 8, 1000);
+	deg = 4000; 
+	pros::delay(1000);
+	movePID(18.5, -18.5, 1500);
+	pros::delay(1000);
+	movePID(38, 38, 2500);
+	hold = false;
+
+	pros::delay(6000);
 }
 void redBack() 
 {
@@ -464,6 +456,7 @@ void initialize()
 	pros::Task flywheelTask2Handle(flywheelTask2);
 	pros::Task lineTaskHandle(lineTask);
 	pros::Task ballTaskHandle(ballTask);
+	pros::Task collectorPIDHandle(collectorPID);
 }
 
 /**
