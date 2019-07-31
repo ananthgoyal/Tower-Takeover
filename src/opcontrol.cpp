@@ -13,7 +13,6 @@ struct PID
 	float target;
 	float sensor;
 };
-//hello world
 typedef struct PID pid;
 //pid LT;
 //others
@@ -22,9 +21,8 @@ typedef struct PID pid;
 okapi::Controller controller;
 okapi::Motor backLift(-18);
 okapi::Motor armLift(19);
-//okapi::Motor leftRoller(3, false, okapi::AbstractMotor::gearset::green);
-//okapi::Motor rightRoller(10, true, okapi::AbstractMotor::gearset::green);
 okapi::MotorGroup rollers({3,-10});
+int lcdCounter = 1;
 
 auto chassis = okapi::ChassisControllerFactory::create({2, 13}, {-9, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
@@ -43,28 +41,9 @@ void opcontrol() {
 		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		backLift.moveVelocity(200 * controller.getDigital(ControllerDigital::R1) - 200 * controller.getDigital(ControllerDigital::R2));
 		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) -  200 * controller.getDigital(ControllerDigital::down));
-		//motorGroup.arcade(200 * controller.getDigital(ControllerDigital::L1));
-		//leftRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::L1));
-		//rightRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::R1));
-		//indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		//flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
 		
 		pros::delay(20);
 	}
-	/*pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor left_mtr(1);
-	pros::Motor right_mtr(2);
-	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
-		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = master.get_analog(ANALOG_RIGHT_Y);
-
-		left_mtr = left;
-		right_mtr = right;
-		pros::delay(20);
-	}*/
 }
 
 /*void liftPID(double height){
@@ -89,7 +68,7 @@ void opcontrol() {
 	//action PID || return func
 }*/
 
-/*void movePID(double distanceL, double distanceR, int ms){
+void movePID(double distanceL, double distanceR, int ms){
 	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
 	double targetR = distanceR * 360 /(2 * 3.1415  * (4.125 / 2));
 	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00275, 0.001, 0.0015); //= data
@@ -115,8 +94,7 @@ void opcontrol() {
 
 	chassis.tank(0,0); 
 
-}*/
-
+}
 /*void positionTracking(double x, double y){
 	int rect = 0; 
 	int length = 0;
@@ -124,12 +102,97 @@ void opcontrol() {
 }*/
 
 //Autonomous
+/*void test();
 
-/*void autonmous(){
-	switch(lcdCounter){
-		//fill
+void autonmous(){
+	switch(lcdCounter)
+	{
+	case 1:
+		test();
+		break;
 	}
-}*/
+}
+
+void test(){
+	std::cout << "check";
+	//chassis.tank(10,10);
+	//movePID(35, 35, 1500);
+}
+
+bool selected = true;	//TODO: false
+
+void left_button()
+{
+	if (!selected)
+	{
+		lcdCounter--;
+		if (lcdCounter < 0)
+		{
+			lcdCounter = 0;
+		}
+	}
+}
+void center_button()
+{
+	if (!selected)
+	{
+		selected = true;
+	}
+}
+void right_button()
+{
+	if (!selected)
+	{
+		lcdCounter++;
+		if (lcdCounter > 1)
+		{
+			lcdCounter = 1;
+		}
+	}
+}
+std::string convert(int arg)
+{
+	switch (arg)
+	{
+	case 1:
+		return "Test";
+	default:
+		return "No Auton";
+	}
+}
+
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
+
+/*void initialize()
+{
+	pros::lcd::initialize();
+	pros::lcd::register_btn0_cb(left_button);
+	pros::lcd::register_btn1_cb(center_button);
+	pros::lcd::register_btn2_cb(right_button);
+
+	//intakeLS.calibrate();
+	//rollers.calibrate();
+	//indexerLS.calibrate();
+	//hoodLS.calibrate();
+
+	while (!selected)
+	{
+		pros::lcd::set_text(0, convert(lcdCounter));
+		pros::delay(20);
+	}
+
+
+	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
+
+}
+
+//void disabled() {}
+
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -144,3 +207,4 @@ void opcontrol() {
  * task, not resume it from where it left off.
  */
 
+//void competitionitialize() {}

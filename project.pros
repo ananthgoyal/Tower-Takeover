@@ -1,7 +1,7 @@
  {
     "py/object": "pros.conductor.project.Project",
     "py/state": {
-        "project_name": "Turning-Point",
+        "project_name": "Tower-Takeover",
         "target": "v5",
         "templates": {
             "kernel": {
