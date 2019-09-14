@@ -19,12 +19,12 @@ typedef struct PID pid;
 
 //pros::ADIPotentiometer potCollector('E'); 
 okapi::Controller controller;
-okapi::Motor backLift(-18);
-okapi::Motor armLift(19);
-okapi::MotorGroup rollers({3,-10});
+okapi::Motor backLift(-9);
+okapi::Motor armLift(14);
+okapi::MotorGroup rollers({12,-19});
 int lcdCounter = 1;
 
-auto chassis = okapi::ChassisControllerFactory::create({2, 13}, {-9, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
+auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
 //NEED PORT auto lift = okapi::ChassisControllerFactory::create()
 //Position Tracking start
@@ -38,8 +38,8 @@ void opcontrol() {
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		backLift.moveVelocity(200 * controller.getDigital(ControllerDigital::R1) - 200 * controller.getDigital(ControllerDigital::R2));
+		rollers.moveVelocity(80 * controller.getDigital(ControllerDigital::L1) - 80 * controller.getDigital(ControllerDigital::L2));
+		backLift.moveVelocity(40 * controller.getDigital(ControllerDigital::R1) - 40 * controller.getDigital(ControllerDigital::R2));
 		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) -  200 * controller.getDigital(ControllerDigital::down));
 		
 		pros::delay(20);
