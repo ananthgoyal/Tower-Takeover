@@ -19,7 +19,7 @@ typedef struct PID pid;
 
 //pros::ADIPotentiometer potCollector('E'); 
 okapi::Controller controller;
-okapi::Motor backLift(9);
+okapi::Motor backLift(-9);
 okapi::Motor armLift(14);
 okapi::MotorGroup rollers({12,-19});
 int lcdCounter = 1;
@@ -39,7 +39,7 @@ void opcontrol() {
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		backLift.moveVelocity(200 * controller.getDigital(ControllerDigital::R1) - 200 * controller.getDigital(ControllerDigital::R2));
+		backLift.moveVelocity(50 * controller.getDigital(ControllerDigital::R1) - 50 * controller.getDigital(ControllerDigital::R2));
 		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
 		//motorGroup.arcade(200 * controller.getDigital(ControllerDigital::L1));
 		//leftRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::L1));
