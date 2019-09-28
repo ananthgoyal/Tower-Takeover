@@ -13,7 +13,6 @@ struct PID
 	float target;
 	float sensor;
 };
-//hello world
 typedef struct PID pid;
 //pid LT;
 //others
@@ -50,20 +49,6 @@ void opcontrol() {
 		
 		pros::delay(20);
 	}
-	/*pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor left_mtr(1);
-	pros::Motor right_mtr(2);
-	while (true) {
-		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
-		int left = master.get_analog(ANALOG_LEFT_Y);
-		int right = master.get_analog(ANALOG_RIGHT_Y);
-
-		left_mtr = left;
-		right_mtr = right;
-		pros::delay(20);
-	}*/
 }
 
 /*void liftPID(double height){
@@ -115,7 +100,6 @@ void movePID(double distanceL, double distanceR, int ms){
 	chassis.tank(0,0); 
 
 }
-
 /*void positionTracking(double x, double y){
 	int rect = 0; 
 	int length = 0;
@@ -123,12 +107,97 @@ void movePID(double distanceL, double distanceR, int ms){
 }*/
 
 //Autonomous
+/*void test();
 
-/*void autonmous(){
-	switch(lcdCounter){
-		//fill
+void autonmous(){
+	switch(lcdCounter)
+	{
+	case 1:
+		test();
+		break;
 	}
-}*/
+}
+
+void test(){
+	std::cout << "check";
+	//chassis.tank(10,10);
+	//movePID(35, 35, 1500);
+}
+
+bool selected = true;	//TODO: false
+
+void left_button()
+{
+	if (!selected)
+	{
+		lcdCounter--;
+		if (lcdCounter < 0)
+		{
+			lcdCounter = 0;
+		}
+	}
+}
+void center_button()
+{
+	if (!selected)
+	{
+		selected = true;
+	}
+}
+void right_button()
+{
+	if (!selected)
+	{
+		lcdCounter++;
+		if (lcdCounter > 1)
+		{
+			lcdCounter = 1;
+		}
+	}
+}
+std::string convert(int arg)
+{
+	switch (arg)
+	{
+	case 1:
+		return "Test";
+	default:
+		return "No Auton";
+	}
+}
+
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
+
+/*void initialize()
+{
+	pros::lcd::initialize();
+	pros::lcd::register_btn0_cb(left_button);
+	pros::lcd::register_btn1_cb(center_button);
+	pros::lcd::register_btn2_cb(right_button);
+
+	//intakeLS.calibrate();
+	//rollers.calibrate();
+	//indexerLS.calibrate();
+	//hoodLS.calibrate();
+
+	while (!selected)
+	{
+		pros::lcd::set_text(0, convert(lcdCounter));
+		pros::delay(20);
+	}
+
+
+	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
+
+}
+
+//void disabled() {}
+
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -143,3 +212,4 @@ void movePID(double distanceL, double distanceR, int ms){
  * task, not resume it from where it left off.
  */
 
+//void competitionitialize() {}
