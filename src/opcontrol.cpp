@@ -41,15 +41,10 @@ void opcontrol() {
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		backLift.moveVelocity(50 * controller.getDigital(ControllerDigital::R1) - 50 * controller.getDigital(ControllerDigital::R2));
 		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
-		if (controller.getDigital(ControllerDigital::X)) {
-			if (intakeSpeed == 0){
-				intakeSpeed = 200;
-			}
-			else if (intakeSpeed == 200) {
+		if (controller.getDigital(ControllerDigital::left)) {
+			intakeSpeed += 100;
+			if (intakeSpeed > 200){
 				intakeSpeed = 100;
-			}
-			else if (intakeSpeed = 100) {
-				intakeSpeed = 0;
 			}
 		}
 		rollers.moveVelocity(intakeSpeed * controller.getDigital(ControllerDigital::L1) - intakeSpeed * controller.getDigital(ControllerDigital::L2));
@@ -186,7 +181,7 @@ std::string convert(int arg)
  * to keep execution time for this mode under a few seconds.
  */
 
-void initialize()
+/*void initialize()
 {
 	pros::lcd::initialize();
 	pros::lcd::register_btn0_cb(left_button);
