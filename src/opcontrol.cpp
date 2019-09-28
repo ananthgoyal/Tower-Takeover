@@ -46,16 +46,16 @@ void opcontrol() {
 	}
 }
 
-/*void liftPID(double height){
-	LT.target = height; 
+void liftPID(double degrees){
+	LT.target = degrees; 
 	LT.integral = 0;  
 	int timer = 0; 
 
 	while(timer < 50){ //or while(LT.sensor - error <= 10)
-		LT.kP = 0;//tuned
-		LT.kD = 0; //tuned
-		LT.kI = 0; //tuned
-		LT.sensor = potCollector.get_value(); // = sensor.getValue || post setup
+		LT.kP = 0.1;//need tuning
+		LT.kD = 0.1; //need tuning
+		LT.kI = 0; //need tuning
+		LT.sensor = armLift.getValue(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
 		LT.derivative = LT.error - LT.previous_error; 
 		LT.integral += LT.error; 
@@ -66,7 +66,7 @@ void opcontrol() {
 		pros::delay(20); 
 	}
 	//action PID || return func
-}*/
+}
 
 void movePID(double distanceL, double distanceR, int ms){
 	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
@@ -95,6 +95,9 @@ void movePID(double distanceL, double distanceR, int ms){
 	chassis.tank(0,0); 
 
 }
+
+
+void 
 /*void positionTracking(double x, double y){
 	int rect = 0; 
 	int length = 0;
