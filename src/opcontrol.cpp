@@ -23,6 +23,7 @@ okapi::Motor backLift(-9);
 okapi::Motor armLift(14);
 okapi::MotorGroup rollers({12,-19});
 int lcdCounter = 1;
+int intakeSpeed = 0;
 
 auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
@@ -38,9 +39,21 @@ void opcontrol() {
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		backLift.moveVelocity(50 * controller.getDigital(ControllerDigital::R1) - 50 * controller.getDigital(ControllerDigital::R2));
 		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
+		if (controller.getDigital(ControllerDigital::X)) {
+			if (intakeSpeed == 0){
+				intakeSpeed = 200;
+			}
+			else if (intakeSpeed == 200) {
+				intakeSpeed = 100;
+			}
+			else if (intakeSpeed = 100) {
+				intakeSpeed = 0;
+			}
+		}
+		rollers.moveVelocity(intakeSpeed * controller.getDigital(ControllerDigital::L1) - intakeSpeed * controller.getDigital(ControllerDigital::L2));
+		//rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		//motorGroup.arcade(200 * controller.getDigital(ControllerDigital::L1));
 		//leftRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::L1));
 		//rightRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::R1));
@@ -173,7 +186,7 @@ std::string convert(int arg)
  * to keep execution time for this mode under a few seconds.
  */
 
-/*void initialize()
+void initialize()
 {
 	pros::lcd::initialize();
 	pros::lcd::register_btn0_cb(left_button);
