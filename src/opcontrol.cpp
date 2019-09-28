@@ -19,11 +19,13 @@ typedef struct PID pid;
 
 //pros::ADIPotentiometer potCollector('E'); 
 okapi::Controller controller;
-okapi::Motor backLift(-9);
+okapi::Motor backLift(-8);
 okapi::Motor armLift(14);
 okapi::MotorGroup rollers({12,-19});
 int lcdCounter = 1;
 int intakeSpeed = 0;
+int buttonCount = 0;
+bool isPressed = false;
 
 auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
@@ -41,12 +43,20 @@ void opcontrol() {
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		backLift.moveVelocity(50 * controller.getDigital(ControllerDigital::R1) - 50 * controller.getDigital(ControllerDigital::R2));
 		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
+		//intakeSpeed = 200;
+		std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
 		if (controller.getDigital(ControllerDigital::left)) {
-			intakeSpeed += 100;
-			if (intakeSpeed > 200){
+			
+			buttonCount++;
+			if(buttonCount%2 == 1){
 				intakeSpeed = 100;
 			}
+			else{
+				intakeSpeed = 200;
+			}
+			pros::delay(300);
 		}
+	
 		rollers.moveVelocity(intakeSpeed * controller.getDigital(ControllerDigital::L1) - intakeSpeed * controller.getDigital(ControllerDigital::L2));
 		//rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		//motorGroup.arcade(200 * controller.getDigital(ControllerDigital::L1));
@@ -59,7 +69,7 @@ void opcontrol() {
 	}
 }
 
-void liftPID(double degrees){
+/*void liftPID(double degrees){
 	LT.target = degrees; 
 	LT.integral = 0;  
 	int timer = 0; 
@@ -79,7 +89,7 @@ void liftPID(double degrees){
 		pros::delay(20); 
 	}
 	//action PID || return func
-}
+*///}
 
 void movePID(double distanceL, double distanceR, int ms){
 	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
@@ -110,7 +120,7 @@ void movePID(double distanceL, double distanceR, int ms){
 }
 
 
-void 
+//void 
 /*void positionTracking(double x, double y){
 	int rect = 0; 
 	int length = 0;
