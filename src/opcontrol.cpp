@@ -14,7 +14,7 @@ struct PID
 	float sensor;
 };
 typedef struct PID pid;
-//pid LT;
+pid LT;
 //others
 
 //pros::ADIPotentiometer potCollector('E'); 
@@ -69,33 +69,32 @@ void opcontrol() {
 	}
 }
 
-/*void liftPID(double degrees){
+void liftPID(Motor lift, double degrees){
 	LT.target = degrees; 
 	LT.integral = 0;  
 	int timer = 0; 
 
-	while(timer < 50){ //or while(LT.sensor - error <= 10)
+	while(LT.sensor - LT.error <= 10) { //or while(timer < 50){ 
 		LT.kP = 0.1;//need tuning
 		LT.kD = 0.1; //need tuning
 		LT.kI = 0; //need tuning
-		LT.sensor = armLift.getValue(); // = sensor.getValue || post setup
+		LT.sensor = backLift.getPosition(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
 		LT.derivative = LT.error - LT.previous_error; 
 		LT.integral += LT.error; 
-		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral)
-		//lift.moveVelocity(LT.speed);
+		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
+		lift.moveVelocity(LT.speed);
 		//fill
 		timer++; 
 		pros::delay(20); 
 	}
-	//action PID || return func
-*///}
+}
 
 void movePID(double distanceL, double distanceR, int ms){
 	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
 	double targetR = distanceR * 360 /(2 * 3.1415  * (4.125 / 2));
-	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00275, 0.001, 0.0015); //= data
-	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00257, 0.001, 0.0015);
+	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00125, 0.001, 0.0015); //= data
+	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00125, 0.001, 0.0015);
 	chassis.resetSensors(); 
 
 	int timer = 0; 
@@ -119,7 +118,9 @@ void movePID(double distanceL, double distanceR, int ms){
 
 }
 
+/*void armLifting(){
 
+}*/
 //void 
 /*void positionTracking(double x, double y){
 	int rect = 0; 
@@ -131,10 +132,16 @@ void movePID(double distanceL, double distanceR, int ms){
 void test(){
 	//std::cout << "check";
 	//chassis.tank(10,10);
-	chassis.tank(35,35);
-	pros::delay(1000);
-	chassis.tank(0,0);
-	movePID(35, 35, 1500);
+	rollers.moveVelocity(200);
+	movePID(37, 37, 1500);
+	movePID(12, -12, 850);
+	rollers.moveVelocity(0);
+	movePID(10, 10, 1000);
+	movePID(12, -12, 850);
+	movePID(25, 25, 1500);
+	backLift.moveVelocity(-50);
+	rollers.moveVelocity(-100);
+
 }
 
 void autonomous(){
@@ -146,7 +153,7 @@ void autonomous(){
 	}
 }
 
-bool selected = true;	//TODO: false
+bool selected = false;	//TODO: false
 
 void left_button()
 {
