@@ -128,21 +128,22 @@ void movePID(double distanceL, double distanceR, int ms){
 }*/
 
 //Autonomous
-/*void test();
+void test(){
+	//std::cout << "check";
+	//chassis.tank(10,10);
+	chassis.tank(35,35);
+	pros::delay(1000);
+	chassis.tank(0,0);
+	movePID(35, 35, 1500);
+}
 
-void autonmous(){
+void autonomous(){
 	switch(lcdCounter)
 	{
 	case 1:
 		test();
 		break;
 	}
-}
-
-void test(){
-	std::cout << "check";
-	//chassis.tank(10,10);
-	//movePID(35, 35, 1500);
 }
 
 bool selected = true;	//TODO: false
@@ -194,7 +195,7 @@ std::string convert(int arg)
  * to keep execution time for this mode under a few seconds.
  */
 
-/*void initialize()
+void initialize()
 {
 	pros::lcd::initialize();
 	pros::lcd::register_btn0_cb(left_button);
