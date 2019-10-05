@@ -40,16 +40,18 @@ void backLiftPID(double degrees){
 	LT.target = degrees; 
 	LT.integral = 0;
 	LT.sensor = backLift.getPosition();  
+	LT.error = LT.target - LT.sensor;
 	int timer = 0; 
 
-	while(LT.sensor - LT.error <= 10) { //or while(timer < 50){ 
-		LT.kP = 0.1;//need tuning
-		LT.kD = 0.1; //need tuning
+	while(abs(LT.error) >= 10) { //or while(timer < 50){ 
+		LT.kP = 0.3;//need tuning
+		LT.kD = 0; //need tuning
 		LT.kI = 0; //need tuning
 		LT.sensor = backLift.getPosition(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
 		LT.derivative = LT.error - LT.previous_error; 
 		LT.integral += LT.error; 
+		LT.previous_error = LT.error;
 		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
 		backLift.moveVelocity(LT.speed);
 		//fill
@@ -62,10 +64,11 @@ void armLiftPID(double degrees){
 	LT.target = degrees; 
 	LT.integral = 0;
 	LT.sensor = armLift.getPosition(); 
+	LT.error = LT.target - LT.sensor;
 	int timer = 0; 
 
-	while(LT.sensor - LT.error <= 10) { //or while(timer < 50){ 
-		LT.kP = 0.1;//need tuning
+	while(abs(LT.error) >= 10) { //or while(timer < 50){ 
+		LT.kP = 0.3;//need tuning
 		LT.kD = 0.1; //need tuning
 		LT.kI = 0; //need tuning
 		LT.sensor = armLift.getPosition(); // = sensor.getValue || post setup
@@ -158,17 +161,13 @@ void opcontrol() {
 void test(){
 	//std::cout << "check";
 	//chassis.tank(10,10);
-	
+
 	//Flip out
 	backLiftPID(700);
-	pros::delay(2000);
-	backLiftPID(0);
-	pros::delay(2000);
-	backLift.moveVelocity(0);
-	armLiftPID(500);
-	pros::delay(1500);
+	armLiftPID(275);
 	armLift.moveVelocity(0);
-	pros::delay(500);
+	backLiftPID(0);
+	pros::delay(25);
 
 	//Pick up the cubes
 	rollers.moveVelocity(200);
@@ -181,26 +180,21 @@ void test(){
 	//Move forward, turn, and into goal
 	movePID(10, 10, 1500);
 	movePID(16, -16, 1500);
-	movePID(10, 10, 1000);
+	movePID(18, 18, 1000);
 
 	//Get bottom cube in position to stack
 	rollers.moveVelocity(-100);
-	pros::delay(475);
+	pros::delay(600);
 	rollers.moveVelocity(0);
 
-	//Straighten up the tray
-	backLiftPID(700);
-	pros::delay(2500);
+	//Straighten up the tray and align bottom
+	backLiftPID(800);
 	backLift.moveVelocity(0);
-	rollers.moveVelocity(100);
-	pros::delay(500);
-	rollers.moveVelocity(0);
 
 	//Outtake the cubes and move backwards
 	rollers.moveVelocity(-100);
 	movePID(-15, -15, 1500);
 	rollers.moveVelocity(0);
-
 }
 
 void autonomous(){
