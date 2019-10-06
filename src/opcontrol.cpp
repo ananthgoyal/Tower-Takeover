@@ -158,10 +158,7 @@ void opcontrol() {
 }*/
 
 //Autonomous
-void test(){
-	//std::cout << "check";
-	//chassis.tank(10,10);
-
+void red(){
 	//Flip out
 	backLiftPID(700);
 	armLiftPID(275);
@@ -197,25 +194,64 @@ void test(){
 	rollers.moveVelocity(0);
 }
 
+void blue() {
+	//Flip out
+	backLiftPID(700);
+	armLiftPID(275);
+	armLift.moveVelocity(0);
+	backLiftPID(0);
+	pros::delay(25);
+
+	//Pick up the cubes
+	rollers.moveVelocity(200);
+	movePID(44, 44, 3000);
+
+	//Move back to wall align
+	movePID(-44, -44, 3000);
+	rollers.moveVelocity(0);;
+
+	//Move forward, turn, and into goal
+	movePID(10, 10, 1500);
+	movePID(-16, 16, 1500);
+	movePID(18, 18, 1000);
+
+	//Get bottom cube in position to stack
+	rollers.moveVelocity(-100);
+	pros::delay(600);
+	rollers.moveVelocity(0);
+
+	//Straighten up the tray and align bottom
+	backLiftPID(800);
+	backLift.moveVelocity(0);
+
+	//Outtake the cubes and move backwards
+	rollers.moveVelocity(-100);
+	movePID(-15, -15, 1500);
+	rollers.moveVelocity(0);
+}
+
 void autonomous(){
 	switch(lcdCounter)
 	{
 	case 1:
-		test();
+		red();
 		break;
 	}
+	case 2:
+		blue();
+		break;
 }
 
-bool selected = true;	//TODO: false
+bool selected = false;	//TODO: false
 
 void left_button()
 {
 	if (!selected)
 	{
 		lcdCounter--;
-		if (lcdCounter < 0)
+		if (lcdCounter < 1)
 		{
-			lcdCounter = 0;
+			lcdCounter = 1;
 		}
 	}
 }
@@ -231,9 +267,9 @@ void right_button()
 	if (!selected)
 	{
 		lcdCounter++;
-		if (lcdCounter > 1)
+		if (lcdCounter > 2)
 		{
-			lcdCounter = 1;
+			lcdCounter = 2;
 		}
 	}
 }
@@ -242,7 +278,9 @@ std::string convert(int arg)
 	switch (arg)
 	{
 	case 1:
-		return "Test";
+		return "Red";
+	case 2:
+		return "Blue";
 	default:
 		return "No Auton";
 	}
