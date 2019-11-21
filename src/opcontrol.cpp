@@ -68,7 +68,7 @@ void armLiftPID(double degrees){
 	int timer = 0; 
 
 	while(abs(LT.error) >= 10) { //or while(timer < 50){ 
-		LT.kP = 0.3;//need tuning
+		LT.kP = 0.4;//need tuning
 		LT.kD = 0.1; //need tuning
 		LT.kI = 0; //need tuning
 		LT.sensor = armLift.getPosition(); // = sensor.getValue || post setup
@@ -86,8 +86,8 @@ void armLiftPID(double degrees){
 void movePID(double distanceL, double distanceR, int ms){
 	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
 	double targetR = distanceR * 360 /(2 * 3.1415  * (4.125 / 2));
-	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.00100, 0.001, 0.0015); //= data
-	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.00100, 0.001, 0.0015);
+	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.0016, 0.001, 0.0015); //= data
+	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.0016, 0.001, 0.0015);
 	chassis.resetSensors(); 
 
 	int timer = 0; 
@@ -117,7 +117,7 @@ void opcontrol() {
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		backLift.moveVelocity(50 * controller.getDigital(ControllerDigital::R1) - 50 * controller.getDigital(ControllerDigital::R2));
+		backLift.moveVelocity(25 * controller.getDigital(ControllerDigital::R1) - 25 * controller.getDigital(ControllerDigital::R2));
 		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
 		/*if (backLift.getPosition() > -500 && controller.getDigital(ControllerDigital::up) || controller.getDigital(ControllerDigital::down)) {
 				backLift.moveVelocity(50 * controller.getDigital(ControllerDigital::up) - 50 * controller.getDigital(ControllerDigital::down));
@@ -160,12 +160,18 @@ void opcontrol() {
 //Autonomous
 void red(){
 	//Flip out
-	backLiftPID(700);
-	armLiftPID(275);
+	//backLiftPID(760);
+	backLift.moveVelocity(200);
+	pros::delay(1000);
+	backLift.moveVelocity(0);
+	armLiftPID(425);
+	armLift.moveVelocity(-100);
+	pros::delay(500);
 	armLift.moveVelocity(0);
 	backLiftPID(0);
 	pros::delay(25);
 
+	
 	//Pick up the cubes
 	rollers.moveVelocity(200);
 	movePID(44, 44, 3000);
@@ -194,10 +200,19 @@ void red(){
 	rollers.moveVelocity(0);
 }
 
+void push() {
+	movePID(30, 30, 1500);
+	movePID(-30, -30, 1500);
+}
+
 void blue() {
 	//Flip out
-	backLiftPID(700);
-	armLiftPID(275);
+	backLift.moveVelocity(200);
+	pros::delay(1500);
+	backLift.moveVelocity(0);
+	armLiftPID(425);
+	armLift.moveVelocity(-100);
+	pros::delay(500);
 	armLift.moveVelocity(0);
 	backLiftPID(0);
 	pros::delay(25);
@@ -233,25 +248,30 @@ void blue() {
 void autonomous(){
 	switch(lcdCounter)
 	{
+	case 0:
+		break;
 	case 1:
 		red();
 		break;
-	}
 	case 2:
+		push();
+		break;
+	case 3:
 		blue();
 		break;
+	}
 }
 
-bool selected = false;	//TODO: false
+bool selected = true;	//TODO: false
 
 void left_button()
 {
 	if (!selected)
 	{
 		lcdCounter--;
-		if (lcdCounter < 1)
+		if (lcdCounter < 0)
 		{
-			lcdCounter = 1;
+			lcdCounter = 0;
 		}
 	}
 }
@@ -267,9 +287,9 @@ void right_button()
 	if (!selected)
 	{
 		lcdCounter++;
-		if (lcdCounter > 2)
+		if (lcdCounter > 3)
 		{
-			lcdCounter = 2;
+			lcdCounter = 3;
 		}
 	}
 }
@@ -277,9 +297,13 @@ std::string convert(int arg)
 {
 	switch (arg)
 	{
+	case 0:
+		return "No Auton";
 	case 1:
 		return "Red";
 	case 2:
+		return "Push";
+	case 3:
 		return "Blue";
 	default:
 		return "No Auton";
