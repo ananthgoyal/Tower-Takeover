@@ -195,7 +195,7 @@ void opcontrol() {
 
 //Autonomous
 void red(){
-		//Flip out
+	//Flip out
 	rollers.moveVelocity(-200);
 	pros::delay(1200);
 	rollers.moveVelocity(0);
@@ -253,7 +253,7 @@ void blue() {
 	rollers.moveVelocity(0);
 	pros::delay(200);
 	trayLift.moveVelocity(-200);
-	pros::delay(400);
+	pros::delay(550);
 	trayLift.moveVelocity(0);
 	pros::delay(700);
 
@@ -264,31 +264,31 @@ void blue() {
 	slowMovePID(27, 27, 1500);
 
 	//Move back to wall align
-	slowMovePID(-45, -45, 2000);
+	slowMovePID(-43, -43, 2000);
 	rollers.moveVelocity(0);;
 
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	fastMovePID(-17, 17, 800);
+	fastMovePID(-15, 15, 800);
 	fastMovePID(9, 9, 800);
 
 	//Get bottom cube in position to stack
 	armLift.moveVelocity(-200);
-	pros::delay(300);
+	pros::delay(200);
 	armLift.moveVelocity(0);
 	rollers.moveVelocity(-100);
 	pros::delay(400);
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(950);
+	backLiftPID(930);
 	trayLift.moveVelocity(0);
-	slowMovePID(10, 10, 400);
+	slowMovePID(8, 8, 300);
 
 	//Outtake the cubes and move backwards
+	rollers.moveVelocity(-70);
 	armLift.moveVelocity(-200);
-	pros::delay(500);
-	rollers.moveVelocity(-80);
+	pros::delay(400);
 	slowMovePID(-15, -15, 1500);
 	rollers.moveVelocity(0);
 }
