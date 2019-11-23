@@ -46,7 +46,7 @@ void backLiftPID(double degrees){
 	int timer = 0; 
 
 	while(abs(LT.error) >= 10) { //or while(timer < 50){ 
-		LT.kP = 0.3;//need tuning
+		LT.kP = 0.28;//need tuning
 		LT.kD = 0; //need tuning
 		LT.kI = 0; //need tuning
 		LT.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
@@ -209,34 +209,34 @@ void red(){
 	//Pick up the cubes
 	rollers.moveVelocity(150);
 	slowMovePID(25, 25, 1500);
-	slowMovePID(28, 28, 1500);
+	slowMovePID(27, 27, 1500);
 
 	//Move back to wall align
-	slowMovePID(-45, -45, 2000);
+	slowMovePID(-43, -43, 2000);
 	rollers.moveVelocity(0);;
 
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	fastMovePID(15.5, -15.5, 800);
-	fastMovePID(9.5, 9.5, 800);
+	fastMovePID(15, -15, 800);
+	fastMovePID(9, 9, 800);
 
 	//Get bottom cube in position to stack
 	armLift.moveVelocity(-200);
-	pros::delay(300);
+	pros::delay(200);
 	armLift.moveVelocity(0);
 	rollers.moveVelocity(-100);
 	pros::delay(400);
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(935);
+	backLiftPID(930);
 	trayLift.moveVelocity(0);
-	slowMovePID(10, 10, 400);
-	pros::delay(200);
+	slowMovePID(8, 8, 300);
 
 	//Outtake the cubes and move backwards
-	rollers.moveVelocity(-80);
+	rollers.moveVelocity(-70);
 	armLift.moveVelocity(-200);
+	pros::delay(400);
 	slowMovePID(-15, -15, 1500);
 	rollers.moveVelocity(0);
 }
@@ -261,7 +261,7 @@ void blue() {
 	//Pick up the cubes
 	rollers.moveVelocity(150);
 	slowMovePID(25, 25, 1500);
-	slowMovePID(30, 30, 1500);
+	slowMovePID(27, 27, 1500);
 
 	//Move back to wall align
 	slowMovePID(-45, -45, 2000);
@@ -287,6 +287,7 @@ void blue() {
 
 	//Outtake the cubes and move backwards
 	armLift.moveVelocity(-200);
+	pros::delay(500);
 	rollers.moveVelocity(-80);
 	slowMovePID(-15, -15, 1500);
 	rollers.moveVelocity(0);
@@ -318,7 +319,7 @@ void left_button()
 		lcdCounter--;
 		if (lcdCounter < 0)
 		{
-			lcdCounter = 0;//my name is bily and i am gay
+			lcdCounter = 0;
 		}
 	}
 }
