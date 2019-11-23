@@ -17,15 +17,16 @@ typedef struct PID pid;
 pid LT;
 //others
 
-//pros::ADIPotentiometer potCollector('E'); 
+pros::ADIPotentiometer trayPot('A'); 
 okapi::Controller controller;
-okapi::Motor backLift(-8);
+okapi::Motor trayLift(-8);
 okapi::Motor armLift(14);
 okapi::MotorGroup rollers({12,-19});
 int lcdCounter = 1;
-int intakeSpeed = 0;
 int buttonCount = 0;
 bool isPressed = false;
+double slowTraySpeed = 0.15;
+double fastTraySpeed = 1;
 
 auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
@@ -39,7 +40,7 @@ auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okap
 void backLiftPID(double degrees){
 	LT.target = degrees; 
 	LT.integral = 0;
-	LT.sensor = backLift.getPosition();  
+	LT.sensor = trayLift.getPosition();  
 	LT.error = LT.target - LT.sensor;
 	int timer = 0; 
 
@@ -47,13 +48,13 @@ void backLiftPID(double degrees){
 		LT.kP = 0.3;//need tuning
 		LT.kD = 0; //need tuning
 		LT.kI = 0; //need tuning
-		LT.sensor = backLift.getPosition(); // = sensor.getValue || post setup
+		LT.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
 		LT.derivative = LT.error - LT.previous_error; 
 		LT.integral += LT.error; 
 		LT.previous_error = LT.error;
 		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
-		backLift.moveVelocity(LT.speed);
+		trayLift.moveVelocity(LT.speed);
 		//fill
 		timer++; 
 		pros::delay(20); 
@@ -117,13 +118,14 @@ void opcontrol() {
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		backLift.moveVelocity(25 * controller.getDigital(ControllerDigital::R1) - 25 * controller.getDigital(ControllerDigital::R2));
-		armLift.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
-		/*if (backLift.getPosition() > -500 && controller.getDigital(ControllerDigital::up) || controller.getDigital(ControllerDigital::down)) {
-				backLift.moveVelocity(50 * controller.getDigital(ControllerDigital::up) - 50 * controller.getDigital(ControllerDigital::down));
-		}*/
-		//intakeSpeed = 200;
-		std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
+		
+	
+		trayLift.controllerSet(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
+								fastTraySpeed * controller.getDigital(ControllerDigital::left)
+								- fastTraySpeed * controller.getDigital(ControllerDigital::R2));
+		armLift.controllerSet(controller.getDigital(ControllerDigital::up) - controller.getDigital(ControllerDigital::down));
+	
+		/*std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
 		if (controller.getDigital(ControllerDigital::left)) {
 			
 			buttonCount++;
@@ -134,9 +136,9 @@ void opcontrol() {
 				intakeSpeed = 200;
 			}
 			pros::delay(300);
-		}
+		}*/
 	
-		rollers.moveVelocity(intakeSpeed * controller.getDigital(ControllerDigital::L1) - intakeSpeed * controller.getDigital(ControllerDigital::L2));
+		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		//rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 		//motorGroup.arcade(200 * controller.getDigital(ControllerDigital::L1));
 		//leftRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::L1));
@@ -161,9 +163,9 @@ void opcontrol() {
 void red(){
 	//Flip out
 	//backLiftPID(760);
-	backLift.moveVelocity(200);
+	trayLift.moveVelocity(200);
 	pros::delay(1000);
-	backLift.moveVelocity(0);
+	trayLift.moveVelocity(0);
 	armLiftPID(425);
 	armLift.moveVelocity(-100);
 	pros::delay(500);
@@ -192,7 +194,7 @@ void red(){
 
 	//Straighten up the tray and align bottom
 	backLiftPID(800);
-	backLift.moveVelocity(0);
+	trayLift.moveVelocity(0);
 
 	//Outtake the cubes and move backwards
 	rollers.moveVelocity(-100);
@@ -207,9 +209,9 @@ void push() {
 
 void blue() {
 	//Flip out
-	backLift.moveVelocity(200);
+	trayLift.moveVelocity(200);
 	pros::delay(1500);
-	backLift.moveVelocity(0);
+	trayLift.moveVelocity(0);
 	armLiftPID(425);
 	armLift.moveVelocity(-100);
 	pros::delay(500);
@@ -237,7 +239,7 @@ void blue() {
 
 	//Straighten up the tray and align bottom
 	backLiftPID(800);
-	backLift.moveVelocity(0);
+	trayLift.moveVelocity(0);
 
 	//Outtake the cubes and move backwards
 	rollers.moveVelocity(-100);
