@@ -25,8 +25,8 @@ okapi::MotorGroup rollers({12,-19});
 int lcdCounter = 1;
 int buttonCount = 0;
 bool isPressed = false;
-double slowTraySpeed = 0.15;
-double fastTraySpeed = 1;
+double slowTraySpeed = 27.5;
+double fastTraySpeed = 200;
 
 auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
@@ -119,10 +119,17 @@ void opcontrol() {
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		
-	
-		trayLift.controllerSet(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
+		if(trayLift.getPosition() > -400){
+			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
+								fastTraySpeed * controller.getDigital(ControllerDigital::left) +
+								fastTraySpeed * controller.getDigital(ControllerDigital::up)
+								- fastTraySpeed * controller.getDigital(ControllerDigital::R2));
+		}
+		else {
+			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
 								fastTraySpeed * controller.getDigital(ControllerDigital::left)
 								- fastTraySpeed * controller.getDigital(ControllerDigital::R2));
+		}
 		armLift.controllerSet(controller.getDigital(ControllerDigital::up) - controller.getDigital(ControllerDigital::down));
 	
 		/*std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
