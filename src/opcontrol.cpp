@@ -21,7 +21,7 @@ pros::ADIPotentiometer trayPot('A');
 okapi::Controller controller;
 okapi::Motor trayLift(-8);
 okapi::Motor armLift(14);
-okapi::MotorGroup rollers({12,-19});
+okapi::MotorGroup rollers({15,-19});
 int lcdCounter = 1;
 int buttonCount = 0;
 bool isPressed = false;
@@ -255,7 +255,7 @@ void blue() {
 	trayLift.moveVelocity(-200);
 	pros::delay(550);
 	trayLift.moveVelocity(0);
-	pros::delay(700);
+	pros::delay(800);
 
 	
 	//Pick up the cubes
@@ -269,7 +269,7 @@ void blue() {
 
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	fastMovePID(-15, 15, 800);
+	fastMovePID(-13.85, 13.85, 800);
 	fastMovePID(9, 9, 800);
 
 	//Get bottom cube in position to stack
@@ -281,15 +281,15 @@ void blue() {
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(930);
+	backLiftPID(925);
 	trayLift.moveVelocity(0);
-	slowMovePID(8, 8, 300);
+	slowMovePID(8.5, 8.5, 300);
 
 	//Outtake the cubes and move backwards
 	rollers.moveVelocity(-70);
 	armLift.moveVelocity(-200);
 	pros::delay(400);
-	slowMovePID(-15, -15, 1500);
+	fastMovePID(-15, -15, 1500);
 	rollers.moveVelocity(0);
 }
 
@@ -310,7 +310,7 @@ void autonomous(){
 	}
 }
 
-bool selected = true;	//TODO: false
+bool selected = false;	//TODO: false
 
 void left_button()
 {
