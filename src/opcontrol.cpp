@@ -88,11 +88,11 @@ void armLiftPID(double degrees){
 	}
 }
 
-void movePID(double distanceL, double distanceR, double kP, int ms){
+void movePID(double distanceL, double distanceR, double speedkP, int ms){
 	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
 	double targetR = distanceR * 360 /(2 * 3.1415  * (4.125 / 2));
-	auto drivePIDL = okapi::IterativeControllerFactory::posPID(kP, 0.001, 0.0015); //= data
-	auto drivePIDR = okapi::IterativeControllerFactory::posPID(kP, 0.001, 0.0015);
+	auto drivePIDL = okapi::IterativeControllerFactory::posPID(speedkP, 0.001, 0.0015); //= data
+	auto drivePIDR = okapi::IterativeControllerFactory::posPID(speedkP, 0.001, 0.0015);
 	chassis.resetSensors(); 
 
 	int timer = 0; 
@@ -116,7 +116,7 @@ void movePID(double distanceL, double distanceR, double kP, int ms){
 
 }
 
-void fastMovePID(double distanceL, double distanceR, int ms){
+/*void fastMovePID(double distanceL, double distanceR, int ms){
 	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
 	double targetR = distanceR * 360 /(2 * 3.1415  * (4.125 / 2));
 	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.002, 0.001, 0.0015); //= data
@@ -142,7 +142,7 @@ void fastMovePID(double distanceL, double distanceR, int ms){
 
 	chassis.tank(0,0); 
 
-}
+}*/
 
 
 void opcontrol() {
