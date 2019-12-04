@@ -22,13 +22,14 @@ pros::ADIPotentiometer trayPot('A');
 okapi::Controller controller;
 okapi::Motor trayLift(-8);
 okapi::Motor armLift(14);
-okapi::MotorGroup rollers({15,-19});
+okapi::MotorGroup rollers({16,-19});
 int lcdCounter = 1;
 int buttonCount = 0;
 bool isPressed = false;
 double slowTraySpeed = 27.5;
 double fastTraySpeed = 200;
 bool holdTray = false;
+bool holdLift = false;
 double slowMoveKP = 0.001;
 double fastMoveKP = 0.002;
 
@@ -150,28 +151,25 @@ void opcontrol() {
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		if (trayLift.getPosition() < 450 && controller[ControllerDigital::up].isPressed()){
-			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
-								fastTraySpeed * controller.getDigital(ControllerDigital::left) +
-								fastTraySpeed * controller.getDigital(ControllerDigital::X)
-								- fastTraySpeed * controller.getDigital(ControllerDigital::R2));
-		}
-		else if (trayLift.getPosition() >= 450 && controller[ControllerDigital::X].isPressed()) {
-			holdTray = true;
-		}
-		else{
-			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
-								fastTraySpeed * controller.getDigital(ControllerDigital::left)
-								- fastTraySpeed * controller.getDigital(ControllerDigital::R2));
-		}
+		trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
+							fastTraySpeed * controller.getDigital(ControllerDigital::left)
+							- fastTraySpeed * controller.getDigital(ControllerDigital::R2));
 		armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
 		
 		if (controller[ControllerDigital::right].changedToPressed()){
-			holdTray = false;
+			holdTray = !holdTray;
+		}
+
+		if (controller[ControllerDigital::A].changedToPressed()){
+			holdLift = !holdLift;
 		}
 
 		if (holdTray){
-			trayLift.moveVelocity(1);
+			trayLift.moveVelocity(0.75);
+		}
+
+		if (holdLift){
+			armLift.moveVelocity(0.75);
 		}
 		/*std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
 		if (controller.getDigital(ControllerDigital::left)) {
@@ -263,8 +261,8 @@ void red(){
 }
 
 void push() {
-	fastMovePID(30, 30, 1500);
-	fastMovePID(-30, -30, 1500);
+	movePID(30, 30, fastMoveKP, 1500);
+	movePID(-30, -30, fastMoveKP, 1500);
 }
 
 void blue() {
@@ -295,7 +293,7 @@ void autonomous(){
 	}
 }
 
-bool selected = false;	//TODO: false
+bool selected = true;	//TODO: false
 
 void left_button()
 {
