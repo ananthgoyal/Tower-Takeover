@@ -169,7 +169,7 @@ void opcontrol() {
 		}
 
 		if (holdLift){
-			armLift.moveVelocity(0.75);
+			armLift.moveVelocity(1);
 		}
 		/*std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
 		if (controller.getDigital(ControllerDigital::left)) {
@@ -220,14 +220,16 @@ void collectCubes(){
 	//Pick up the cubes
 	rollers.moveVelocity(150);
 	movePID(25, 25, slowMoveKP, 1500);
-	movePID(27, 27, slowMoveKP, 1500);
+	movePID(27.5, 27.5, slowMoveKP, 1500);
 
 	//Move back to wall align
-	movePID(-43, -43, slowMoveKP, 2000);
-	rollers.moveVelocity(0);
+	//movePID(-43, -43, slowMoveKP, 2000);
+	pros::delay(500);
+	//rollers.moveVelocity(0);
 }
 
 void stackCubes(){
+	rollers.moveVelocity(0);
 	//Get bottom cube in position to stack
 	armLift.moveVelocity(-200);
 	pros::delay(200);
@@ -254,8 +256,9 @@ void red(){
 
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	movePID(15, -15, fastMoveKP, 800);
-	movePID(9, 9, fastMoveKP, 800);
+	movePID(25.5, -25.5, slowMoveKP, 800);
+	pros::delay(500);
+	movePID(45, 45, slowMoveKP, 800);
 
 	stackCubes();
 }
