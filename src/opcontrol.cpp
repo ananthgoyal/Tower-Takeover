@@ -17,13 +17,13 @@ typedef struct PID pid;
 pid LT;
 //others
 
-pros::ADIPotentiometer trayPot('A'); 
+pros::ADIPotentiometer trayPot('A');
 //pros::ADIEncoder trackingWheel('B', 'C');
 okapi::Controller controller;
 okapi::Motor trayLift(-8);
 okapi::Motor armLift(14);
-okapi::MotorGroup rollers({16,-19});
-int lcdCounter = 1;
+okapi::MotorGroup rollers({16, -19});
+int lcdCounter = 2;
 int buttonCount = 0;
 bool isPressed = false;
 double slowTraySpeed = 27.5;
@@ -42,105 +42,113 @@ auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okap
 //float radius; //radius = sector/dTheta
 //End
 
-void backLiftPID(double degrees){
-	LT.target = degrees; 
+void backLiftPID(double degrees)
+{
+	LT.target = degrees;
 	LT.integral = 0;
-	LT.sensor = trayLift.getPosition();  
+	LT.sensor = trayLift.getPosition();
 	LT.error = LT.target - LT.sensor;
-	int timer = 0; 
+	int timer = 0;
 
-	while(abs(LT.error) >= 10) { //or while(timer < 50){ 
-		LT.kP = 0.28;//need tuning
-		LT.kD = 0; //need tuning
-		LT.kI = 0; //need tuning
+	while (abs(LT.error) >= 10)
+	{										//or while(timer < 50){
+		LT.kP = 0.26;						//need tuning
+		LT.kD = 0;							//need tuning
+		LT.kI = 0;							//need tuning
 		LT.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
-		LT.derivative = LT.error - LT.previous_error; 
-		LT.integral += LT.error; 
+		LT.derivative = LT.error - LT.previous_error;
+		LT.integral += LT.error;
 		LT.previous_error = LT.error;
 		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
 		trayLift.moveVelocity(LT.speed);
 		//fill
-		timer++; 
-		pros::delay(20); 
+		timer++;
+		pros::delay(20);
 	}
 }
 
-void armLiftPID(double degrees){
-	LT.target = degrees; 
+void armLiftPID(double degrees)
+{
+	LT.target = degrees;
 	LT.integral = 0;
-	LT.sensor = armLift.getPosition(); 
+	LT.sensor = armLift.getPosition();
 	LT.error = LT.target - LT.sensor;
-	int timer = 0; 
+	int timer = 0;
 
-	while(abs(LT.error) >= 10) { //or while(timer < 50){ 
-		LT.kP = 0.4;//need tuning
-		LT.kD = 0.1; //need tuning
-		LT.kI = 0; //need tuning
+	while (abs(LT.error) >= 10)
+	{									   //or while(timer < 50){
+		LT.kP = 0.4;					   //need tuning
+		LT.kD = 0.1;					   //need tuning
+		LT.kI = 0;						   //need tuning
 		LT.sensor = armLift.getPosition(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
-		LT.derivative = LT.error - LT.previous_error; 
-		LT.integral += LT.error; 
+		LT.derivative = LT.error - LT.previous_error;
+		LT.integral += LT.error;
 		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
 		armLift.moveVelocity(LT.speed);
 		//fill
-		timer++; 
-		pros::delay(20); 
+		timer++;
+		pros::delay(20);
 	}
 }
 
-void movePID(double distanceL, double distanceR, double speedkP, int ms){
-	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
-	double targetR = distanceR * 360 /(2 * 3.1415  * (4.125 / 2));
+void movePID(double distanceL, double distanceR, double speedkP, int ms)
+{
+	double targetL = distanceL * 360 / (2 * 3.1415 * (4.125 / 2));
+	double targetR = distanceR * 360 / (2 * 3.1415 * (4.125 / 2));
 	auto drivePIDL = okapi::IterativeControllerFactory::posPID(speedkP, 0.001, 0.0015); //= data
 	auto drivePIDR = okapi::IterativeControllerFactory::posPID(speedkP, 0.001, 0.0015);
-	chassis.resetSensors(); 
+	chassis.resetSensors();
 
-	int timer = 0; 
+	int timer = 0;
 	double errorL;
 	double errorR;
-	double powerL; 
+	double powerL;
 	double powerR;
 
-	while(timer < ms){
-		errorL = targetL - chassis.getSensorVals()[0]; 
+	while (timer < ms)
+	{
+		errorL = targetL - chassis.getSensorVals()[0];
 		errorR = targetR - chassis.getSensorVals()[1];
 		powerL = drivePIDL.step(errorL);
 		powerR = drivePIDR.step(errorR);
 		chassis.tank(-powerL, -powerR);
 
 		pros::delay(10);
-		timer+=10;
+		timer += 10;
 	}
 
-	chassis.tank(0,0); 
-
+	chassis.tank(0, 0);
 }
 
-
-void opcontrol() {
+void opcontrol()
+{
 	while (true)
 	{
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) + 
-							fastTraySpeed * controller.getDigital(ControllerDigital::left)
-							- fastTraySpeed * controller.getDigital(ControllerDigital::R2));
+		trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
+							  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
 		armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
-		
-		if (controller[ControllerDigital::right].changedToPressed()){
+
+		if (controller[ControllerDigital::right].changedToPressed())
+		{
 			holdTray = !holdTray;
 		}
 
-		if (controller[ControllerDigital::A].changedToPressed()){
+		if (controller[ControllerDigital::A].changedToPressed())
+		{
 			holdLift = !holdLift;
 		}
 
-		if (holdTray){
+		if (holdTray)
+		{
 			trayLift.moveVelocity(0.75);
 		}
 
-		if (holdLift){
+		if (holdLift)
+		{
 			armLift.moveVelocity(1);
 		}
 		/*std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
@@ -155,16 +163,14 @@ void opcontrol() {
 			}
 			pros::delay(300);
 		}*/
-	
+
 		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		
+
 		pros::delay(20);
 	}
 }
 
-
-
-//void 
+//void
 /*void positionTracking(double x, double y){
 	int rect = 0; 
 	int length = 0;
@@ -172,7 +178,8 @@ void opcontrol() {
 }*/
 
 //Autonomous
-void collectCubes(){
+void collectCubes()
+{
 	//Flip out
 	rollers.moveVelocity(-200);
 	pros::delay(1100);
@@ -189,7 +196,7 @@ void collectCubes(){
 	//Pick up the cubes
 	rollers.moveVelocity(200);
 	movePID(25, 25, slowMoveKP, 1500);
-	movePID(27.5, 27.5, slowMoveKP, 1500);
+	movePID(28, 28, slowMoveKP, 1500);
 
 	//Move back to wall align
 	//movePID(-43, -43, slowMoveKP, 2000);
@@ -197,7 +204,8 @@ void collectCubes(){
 	//rollers.moveVelocity(0);
 }
 
-void stackCubes(){
+void stackCubes()
+{
 	rollers.moveVelocity(0);
 	//Get bottom cube in position to stack
 	armLift.moveVelocity(-200);
@@ -215,42 +223,73 @@ void stackCubes(){
 	//Outtake the cubes and move backwards
 	rollers.moveVelocity(-70);
 	armLift.moveVelocity(-200);
-	pros::delay(400);
+	pros::delay(200);
 	movePID(-15, -15, slowMoveKP, 1500);
 	rollers.moveVelocity(0);
 }
 
-void red(){
+void red()
+{
 	collectCubes();
-
+	rollers.moveVelocity(0);
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	movePID(25.8, -25.8, slowMoveKP, 800);
-	pros::delay(1000);
-	movePID(25, 25, slowMoveKP, 1000);
-	movePID(25, 25, slowMoveKP, 1000);
+	movePID(-43, -43, slowMoveKP, 800);
+	pros::delay(500);
+	movePID(20.5, -20.5, slowMoveKP, 800);
+	pros::delay(500);
+	movePID(11, 11, slowMoveKP, 1000);
+	pros::delay(500);
+	//movePID(25, 25, slowMoveKP, 1000);
 
 	stackCubes();
 }
 
-void push() {
+void push()
+{
 	movePID(30, 30, fastMoveKP, 1500);
 	movePID(-30, -30, fastMoveKP, 1500);
 }
 
-void blue() {
+void blue()
+{
 	collectCubes();
-
+	rollers.moveVelocity(0);
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	movePID(-13.85, 13.85, fastMoveKP, 800);
-	movePID(9, 9, fastMoveKP, 800);
+	movePID(-43, -43, slowMoveKP, 800);
+	pros::delay(400);
+	movePID(-21, 21, slowMoveKP, 800);
+	pros::delay(400);
+	movePID(14, 14, slowMoveKP, 1000);
+	pros::delay(400);
+	//movePID(25, 25, slowMoveKP, 1000);
 
-	stackCubes();
+	rollers.moveVelocity(0);
+	//Get bottom cube in position to stack
+	armLift.moveVelocity(-200);
+	pros::delay(200);
+	armLift.moveVelocity(0);
+	rollers.moveVelocity(-100);
+	pros::delay(400);
+	rollers.moveVelocity(0);
+
+	//Straighten up the tray and align bottom
+	backLiftPID(930);
+	trayLift.moveVelocity(0);
+	movePID(5, 5, slowMoveKP, 300);
+
+	//Outtake the cubes and move backwards
+	rollers.moveVelocity(-70);
+	armLift.moveVelocity(-200);
+	pros::delay(200);
+	movePID(-15, -15, slowMoveKP, 1500);
+	rollers.moveVelocity(0);
 }
 
-void autonomous(){
-	switch(lcdCounter)
+void autonomous()
+{
+	switch (lcdCounter)
 	{
 	case 0:
 		break;
@@ -266,7 +305,7 @@ void autonomous(){
 	}
 }
 
-bool selected = true;	//TODO: false
+bool selected = true; //TODO: false
 
 void left_button()
 {
@@ -339,9 +378,7 @@ void initialize()
 		pros::delay(20);
 	}
 
-
 	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
-
 }
 
 //void disabled() {}
