@@ -117,34 +117,6 @@ void movePID(double distanceL, double distanceR, double speedkP, int ms){
 
 }
 
-/*void fastMovePID(double distanceL, double distanceR, int ms){
-	double targetL = distanceL * 360 /(2 * 3.1415  * (4.125 / 2));
-	double targetR = distanceR * 360 /(2 * 3.1415  * (4.125 / 2));
-	auto drivePIDL = okapi::IterativeControllerFactory::posPID(0.002, 0.001, 0.0015); //= data
-	auto drivePIDR = okapi::IterativeControllerFactory::posPID(0.002, 0.001, 0.0015);
-	chassis.resetSensors(); 
-
-	int timer = 0; 
-	double errorL;
-	double errorR;
-	double powerL; 
-	double powerR;
-
-	while(timer < ms){
-		errorL = targetL - chassis.getSensorVals()[0]; 
-		errorR = targetR - chassis.getSensorVals()[1];
-		powerL = drivePIDL.step(errorL);
-		powerR = drivePIDR.step(errorR);
-		chassis.tank(-powerL, -powerR);
-
-		pros::delay(10);
-		timer+=10;
-	}
-
-	chassis.tank(0,0); 
-
-}*/
-
 
 void opcontrol() {
 	while (true)
@@ -185,12 +157,6 @@ void opcontrol() {
 		}*/
 	
 		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		//rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		//motorGroup.arcade(200 * controller.getDigital(ControllerDigital::L1));
-		//leftRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::L1));
-		//rightRoller.moveVelocity(200 * controller.getDigital(ControllerDigital::R1));
-		//indexer.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
-		//flipper.moveVelocity(200 * controller.getDigital(ControllerDigital::up) - 200 * controller.getDigital(ControllerDigital::down));
 		
 		pros::delay(20);
 	}
@@ -209,18 +175,22 @@ void opcontrol() {
 void collectCubes(){
 	//Flip out
 	rollers.moveVelocity(-200);
-	pros::delay(1200);
+	pros::delay(1000);
 	rollers.moveVelocity(0);
 	pros::delay(200);
+	movePID(8, 8, fastMoveKP, 300);
+	armLift.moveVelocity(200);
+	pros::delay(500);
+	armLift.moveVelocity(0);
 	trayLift.moveVelocity(-200);
-	pros::delay(550);
+	pros::delay(650);
 	trayLift.moveVelocity(0);
 	pros::delay(700);
 
 	//Pick up the cubes
 	rollers.moveVelocity(150);
-	movePID(25, 25, slowMoveKP, 1500);
-	movePID(27.5, 27.5, slowMoveKP, 1500);
+	movePID(22, 22, slowMoveKP, 1500);
+	movePID(22.5, 22.5, slowMoveKP, 1500);
 
 	//Move back to wall align
 	//movePID(-43, -43, slowMoveKP, 2000);
@@ -256,9 +226,9 @@ void red(){
 
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	movePID(25.5, -25.5, slowMoveKP, 800);
-	pros::delay(500);
-	movePID(45, 45, slowMoveKP, 800);
+	movePID(26.5, -26.5, slowMoveKP, 800);
+	pros::delay(1000);
+	movePID(50, 50, slowMoveKP, 1500);
 
 	stackCubes();
 }
