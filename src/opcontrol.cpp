@@ -175,22 +175,21 @@ void opcontrol() {
 void collectCubes(){
 	//Flip out
 	rollers.moveVelocity(-200);
-	pros::delay(1000);
+	pros::delay(1100);
 	rollers.moveVelocity(0);
-	pros::delay(200);
-	movePID(8, 8, fastMoveKP, 300);
+	/*movePID(15, 15, fastMoveKP, 300);
 	armLift.moveVelocity(200);
-	pros::delay(500);
-	armLift.moveVelocity(0);
+	pros::delay(1000);
+	armLift.moveVelocity(0);*/
 	trayLift.moveVelocity(-200);
 	pros::delay(650);
 	trayLift.moveVelocity(0);
-	pros::delay(700);
+	pros::delay(500);
 
 	//Pick up the cubes
-	rollers.moveVelocity(150);
-	movePID(22, 22, slowMoveKP, 1500);
-	movePID(22.5, 22.5, slowMoveKP, 1500);
+	rollers.moveVelocity(200);
+	movePID(25, 25, slowMoveKP, 1500);
+	movePID(27.5, 27.5, slowMoveKP, 1500);
 
 	//Move back to wall align
 	//movePID(-43, -43, slowMoveKP, 2000);
@@ -226,9 +225,10 @@ void red(){
 
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	movePID(26.5, -26.5, slowMoveKP, 800);
+	movePID(25.8, -25.8, slowMoveKP, 800);
 	pros::delay(1000);
-	movePID(50, 50, slowMoveKP, 1500);
+	movePID(25, 25, slowMoveKP, 1000);
+	movePID(25, 25, slowMoveKP, 1000);
 
 	stackCubes();
 }
