@@ -19,10 +19,11 @@ pid LT;
 
 pros::ADIPotentiometer trayPot('A');
 //pros::ADIEncoder trackingWheel('B', 'C');
+//Inertia sensor: port 13
 okapi::Controller controller;
-okapi::Motor trayLift(-8);
-okapi::Motor armLift(14);
-okapi::MotorGroup rollers({16, -19});
+okapi::Motor trayLift(-12);
+okapi::Motor armLift(10);
+okapi::MotorGroup rollers({1, -9});
 int lcdCounter = 2;
 int buttonCount = 0;
 bool isPressed = false;
@@ -33,7 +34,7 @@ bool holdLift = false;
 double slowMoveKP = 0.001;
 double fastMoveKP = 0.002;
 
-auto chassis = okapi::ChassisControllerFactory::create({1, 11}, {-10, -20}, okapi::AbstractMotor::gearset::green, {4.125, 10});
+auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -2}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
 //NEED PORT auto lift = okapi::ChassisControllerFactory::create()
 //Position Tracking start
@@ -305,7 +306,7 @@ void autonomous()
 	}
 }
 
-bool selected = true; //TODO: false
+bool selected = false; //TODO: false
 
 void left_button()
 {
