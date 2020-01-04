@@ -22,8 +22,8 @@ pros::ADIPotentiometer trayPot('A');
 //Inertia sensor: port 13
 okapi::Controller controller;
 okapi::Motor trayLift(-12);
-okapi::Motor armLift(10);
-okapi::MotorGroup rollers({1, -9});
+okapi::Motor armLift(9);
+okapi::MotorGroup rollers({1, 8});
 int lcdCounter = 2;
 int buttonCount = 0;
 bool isPressed = false;
