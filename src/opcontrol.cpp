@@ -23,7 +23,7 @@ pros::ADIPotentiometer trayPot('A');
 okapi::Controller controller;
 okapi::Motor trayLift(-12);
 okapi::Motor armLift(9);
-okapi::MotorGroup rollers({1, 8});
+okapi::MotorGroup rollers({-1, 8});
 int lcdCounter = 2;
 int buttonCount = 0;
 bool isPressed = false;
@@ -306,7 +306,7 @@ void autonomous()
 	}
 }
 
-bool selected = false; //TODO: false
+bool selected = true; //TODO: false
 
 void left_button()
 {
