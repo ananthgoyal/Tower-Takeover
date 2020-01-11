@@ -15,26 +15,30 @@ struct PID
 };
 typedef struct PID pid;
 pid LT;
+pid TL;
 //others
 
-pros::ADIPotentiometer trayPot('A');
+pros::ADIPotentiometer trayPot('H');
+pros::ADIPotentiometer liftPot('F');
 //pros::ADIEncoder trackingWheel('B', 'C');
 //Inertia sensor: port 13
 okapi::Controller controller;
-okapi::Motor trayLift(-12);
+okapi::Motor trayLift(-13);
 okapi::Motor armLift(9);
-okapi::MotorGroup rollers({-1, 8});
+okapi::MotorGroup rollers({-5, 8});
+okapi::Motor rollerOne(-5);
+okapi::Motor rollerTwo(8); 
 int lcdCounter = 2;
 int buttonCount = 0;
 bool isPressed = false;
-double slowTraySpeed = 27.5;
+double slowTraySpeed = 27.5; 
 double fastTraySpeed = 200;
 bool holdTray = false;
 bool holdLift = false;
 double slowMoveKP = 0.001;
 double fastMoveKP = 0.002;
 
-auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -2}, okapi::AbstractMotor::gearset::green, {4.125, 10});
+auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -3}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
 //NEED PORT auto lift = okapi::ChassisControllerFactory::create()
 //Position Tracking start
@@ -69,6 +73,35 @@ void backLiftPID(double degrees)
 	}
 }
 
+void trayLiftPID(double value)
+{
+	TL.target = value;
+	TL.integral = 0;
+	TL.sensor = trayPot.get_value();
+	TL.error = TL.target - TL.sensor;
+	int timer = 0;
+
+	while (true)
+	{									   //or while(timer < 50){
+		TL.kP = 0.4;					   //need tuning
+		TL.kD = 0.1;					   //need tuning
+		TL.kI = 0;						   //need tuning
+		TL.sensor = trayPot.get_value(); // = sensor.getValue || post setup
+		TL.error = TL.target - TL.sensor;
+		TL.derivative = TL.error - TL.previous_error;
+		TL.integral += TL.error;
+		TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
+		trayLift.moveVelocity(TL.speed);
+		//fill
+		timer++;
+		pros::delay(20);
+		std::cout << "\nPot Value:" << trayPot.get_value();
+	}
+
+}
+
+
+
 void armLiftPID(double degrees)
 {
 	LT.target = degrees;
@@ -91,6 +124,7 @@ void armLiftPID(double degrees)
 		//fill
 		timer++;
 		pros::delay(20);
+		
 	}
 }
 
@@ -125,35 +159,48 @@ void movePID(double distanceL, double distanceR, double speedkP, int ms)
 
 void opcontrol()
 {
-	while (true)
+	
+	
+	 while (true)
 	{
+
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 		trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
 							  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
 		armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
 
+		//std::cout << "\nRoller Temperature:" << rollerOne.get_temperature();
+	std::cout << "\nPot Value:" << trayPot.get_value();
 		if (controller[ControllerDigital::right].changedToPressed())
 		{
 			holdTray = !holdTray;
+			std::cout << "\npressed" << trayPot.get_value();
+			pros::delay(500);
 		}
 
 		if (controller[ControllerDigital::A].changedToPressed())
 		{
 			holdLift = !holdLift;
+			
+			
 		}
 
 		if (holdTray)
 		{
-			trayLift.moveVelocity(0.75);
+			trayLift.moveVelocity(200);
+			pros::delay(0.3);
+			trayLift.moveVelocity(-1);
+			//trayLiftPID(1000);
 		}
 
 		if (holdLift)
 		{
 			armLift.moveVelocity(1);
 		}
-		/*std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
-		if (controller.getDigital(ControllerDigital::left)) {
+		
+		//std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
+		/*if (controller.getDigital(ControllerDigital::left)) {
 			
 			buttonCount++;
 			if(buttonCount%2 == 1){
@@ -164,11 +211,11 @@ void opcontrol()
 			}
 			pros::delay(300);
 		}*/
-
+ 
 		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
 
 		pros::delay(20);
-	}
+	 }
 }
 
 //void
@@ -367,7 +414,8 @@ void initialize()
 	pros::lcd::register_btn0_cb(left_button);
 	pros::lcd::register_btn1_cb(center_button);
 	pros::lcd::register_btn2_cb(right_button);
-
+	//pros::lcd::print(0, "Test Temperature", pros::trayLift::get_temperature());
+	
 	//intakeLS.calibrate();
 	//rollers.calibrate();
 	//indexerLS.calibrate();
