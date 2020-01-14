@@ -23,7 +23,7 @@ pros::ADIPotentiometer liftPot('F');
 //pros::ADIEncoder trackingWheel('B', 'C');
 //Inertia sensor: port 13
 okapi::Controller controller;
-okapi::Motor trayLift(-13);
+okapi::Motor trayLift(-16);
 okapi::Motor armLift(9);
 okapi::MotorGroup rollers({-5, 8});
 okapi::Motor rollerOne(-5);
@@ -57,8 +57,8 @@ void backLiftPID(double degrees)
 
 	while (abs(LT.error) >= 10)
 	{										//or while(timer < 50){
-		LT.kP = 0.26;						//need tuning
-		LT.kD = 0;							//need tuning
+		LT.kP = 0.17;						//need tuning
+		LT.kD = 0.01;							//need tuning
 		LT.kI = 0;							//need tuning
 		LT.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
@@ -81,15 +81,16 @@ void trayLiftPID(double value)
 	TL.error = TL.target - TL.sensor;
 	int timer = 0;
 
-	while (true)
+	while (abs(TL.error) >= 10)
 	{									   //or while(timer < 50){
-		TL.kP = 0.4;					   //need tuning
-		TL.kD = 0.1;					   //need tuning
+		TL.kP = 0.1;					   //need tuning
+		TL.kD = 0;					   //need tuning
 		TL.kI = 0;						   //need tuning
 		TL.sensor = trayPot.get_value(); // = sensor.getValue || post setup
 		TL.error = TL.target - TL.sensor;
 		TL.derivative = TL.error - TL.previous_error;
 		TL.integral += TL.error;
+		TL.previous_error = TL.error;
 		TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
 		trayLift.moveVelocity(TL.speed);
 		//fill
@@ -164,34 +165,36 @@ void opcontrol()
 	 while (true)
 	{
 
-		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
-		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
-							  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
-		armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
-
-		//std::cout << "\nRoller Temperature:" << rollerOne.get_temperature();
-	std::cout << "\nPot Value:" << trayPot.get_value();
 		if (controller[ControllerDigital::right].changedToPressed())
 		{
 			holdTray = !holdTray;
 			std::cout << "\npressed" << trayPot.get_value();
 			pros::delay(500);
 		}
+		if (holdTray){
+			/*trayLift.moveVelocity(200);
+			pros::delay(0.3);
+			trayLift.moveVelocity(-1);*/
+			backLiftPID(400);
+		}
+		else {
+			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
+							  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
+		}
+		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
+		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
+		
+		armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
+
+		//std::cout << "\nRoller Temperature:" << rollerOne.get_temperature();
+	std::cout << "\nPot Value:" << trayPot.get_value();
+		
 
 		if (controller[ControllerDigital::A].changedToPressed())
 		{
 			holdLift = !holdLift;
 			
 			
-		}
-
-		if (holdTray)
-		{
-			trayLift.moveVelocity(200);
-			pros::delay(0.3);
-			trayLift.moveVelocity(-1);
-			//trayLiftPID(1000);
 		}
 
 		if (holdLift)
@@ -212,7 +215,7 @@ void opcontrol()
 			pros::delay(300);
 		}*/
  
-		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::L2));
+		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::Y) - 50 * controller.getDigital(ControllerDigital::L2));
 
 		pros::delay(20);
 	 }
