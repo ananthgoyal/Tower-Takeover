@@ -113,7 +113,7 @@ void armLiftPID(double degrees)
 
 	while (abs(LT.error) >= 10)
 	{									   //or while(timer < 50){
-		LT.kP = 0.4;					   //need tuning
+		LT.kP = 0.15;					   //need tuning
 		LT.kD = 0.1;					   //need tuning
 		LT.kI = 0;						   //need tuning
 		LT.sensor = armLift.getPosition(); // = sensor.getValue || post setup
@@ -168,8 +168,6 @@ void opcontrol()
 		if (controller[ControllerDigital::right].changedToPressed())
 		{
 			holdTray = !holdTray;
-			std::cout << "\npressed" << trayPot.get_value();
-			pros::delay(500);
 		}
 		if (holdTray){
 			/*trayLift.moveVelocity(200);
@@ -181,26 +179,24 @@ void opcontrol()
 			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
 							  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
 		}
-		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
-		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-		
-		armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
-
-		//std::cout << "\nRoller Temperature:" << rollerOne.get_temperature();
-	std::cout << "\nPot Value:" << trayPot.get_value();
-		
 
 		if (controller[ControllerDigital::A].changedToPressed())
 		{
 			holdLift = !holdLift;
-			
-			
 		}
 
-		if (holdLift)
+		/*if (holdLift)
 		{
-			armLift.moveVelocity(1);
+			armLiftPID(400);
 		}
+		else {*/
+			armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
+		//}
+		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
+		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
+
+		//std::cout << "\nRoller Temperature:" << rollerOne.get_temperature();
+	std::cout << "\nPot Value:" << trayPot.get_value();
 		
 		//std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
 		/*if (controller.getDigital(ControllerDigital::left)) {
