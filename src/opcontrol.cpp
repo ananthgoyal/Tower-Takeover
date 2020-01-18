@@ -39,6 +39,9 @@ double slowMoveKP = 0.001;
 double fastMoveKP = 0.002;
 
 auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -3}, okapi::AbstractMotor::gearset::green, {4.125, 10});
+
+void trayTask(void *param);
+void armTask(void *param);
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
 //NEED PORT auto lift = okapi::ChassisControllerFactory::create()
 //Position Tracking start
@@ -47,7 +50,7 @@ auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -3}, okap
 //float radius; //radius = sector/dTheta
 //End
 
-void backLiftPID(double degrees)
+void backLiftPID(double degrees, int ms)
 {
 	LT.target = degrees;
 	LT.integral = 0;
@@ -55,7 +58,7 @@ void backLiftPID(double degrees)
 	LT.error = LT.target - LT.sensor;
 	int timer = 0;
 
-	while (abs(LT.error) >= 10)
+	while (timer < ms)
 	{										//or while(timer < 50){
 		LT.kP = 0.17;						//need tuning
 		LT.kD = 0.01;							//need tuning
@@ -68,7 +71,7 @@ void backLiftPID(double degrees)
 		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
 		trayLift.moveVelocity(LT.speed);
 		//fill
-		timer++;
+		timer += 20;
 		pros::delay(20);
 	}
 }
@@ -101,9 +104,7 @@ void trayLiftPID(double value)
 
 }
 
-
-
-void armLiftPID(double degrees)
+void armLiftPID(double degrees, int ms)
 {
 	LT.target = degrees;
 	LT.integral = 0;
@@ -111,7 +112,7 @@ void armLiftPID(double degrees)
 	LT.error = LT.target - LT.sensor;
 	int timer = 0;
 
-	while (abs(LT.error) >= 10)
+	while (timer < ms)
 	{									   //or while(timer < 50){
 		LT.kP = 0.15;					   //need tuning
 		LT.kD = 0.1;					   //need tuning
@@ -123,7 +124,7 @@ void armLiftPID(double degrees)
 		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
 		armLift.moveVelocity(LT.speed);
 		//fill
-		timer++;
+		timer += 20;
 		pros::delay(20);
 		
 	}
@@ -158,6 +159,61 @@ void movePID(double distanceL, double distanceR, double speedkP, int ms)
 	chassis.tank(0, 0);
 }
 
+void trayTask(void *){
+
+	while (true)
+	{
+		if (controller[ControllerDigital::right].changedToPressed())
+		{
+			holdTray = !holdTray;
+		}
+		if (holdTray){										//or while(timer < 50){
+			TL.kP = 0.17;						//need tuning
+			TL.kD = 0.01;							//need tuning
+			TL.kI = 0;							//need tuning
+			TL.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
+			TL.error = TL.target - TL.sensor;
+			TL.derivative = TL.error - TL.previous_error;
+			TL.integral += TL.error;
+			TL.previous_error = TL.error;
+			TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
+			trayLift.moveVelocity(LT.speed);
+		}
+		else {
+			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
+				fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
+		}
+		pros::delay(25);
+	}
+}
+
+void armTask(void *){
+	while (true){
+		if (controller[ControllerDigital::A].changedToPressed())
+		{
+			holdLift = !holdLift;
+		}
+
+		if (holdLift)
+		{
+			LT.kP = 0.15;					   //need tuning
+			LT.kD = 0.1;					   //need tuning
+			LT.kI = 0;						   //need tuning
+			LT.sensor = armLift.getPosition(); // = sensor.getValue || post setup
+			LT.error = LT.target - LT.sensor;
+			LT.derivative = LT.error - LT.previous_error;
+			LT.integral += LT.error;
+			LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
+			armLift.moveVelocity(LT.speed);
+		}
+		else {
+			armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
+		}
+		
+		pros::delay(25);
+	}
+}
+
 void opcontrol()
 {
 	
@@ -165,33 +221,34 @@ void opcontrol()
 	 while (true)
 	{
 
-		if (controller[ControllerDigital::right].changedToPressed())
+		/*if (controller[ControllerDigital::right].changedToPressed())
 		{
 			holdTray = !holdTray;
 		}
 		if (holdTray){
-			/*trayLift.moveVelocity(200);
+			trayLift.moveVelocity(200);
 			pros::delay(0.3);
-			trayLift.moveVelocity(-1);*/
-			backLiftPID(400);
+			trayLift.moveVelocity(-1);
+			//backLiftPID(400, 100);
 		}
 		else {
 			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
 							  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
-		}
+		}*/
 
-		if (controller[ControllerDigital::A].changedToPressed())
+		/*if (controller[ControllerDigital::A].changedToPressed())
 		{
 			holdLift = !holdLift;
 		}
 
-		/*if (holdLift)
+		if (holdLift)
 		{
-			armLiftPID(400);
+			//armLiftPID(400, 800);
+			armLift.moveVelocity(1);
 		}
-		else {*/
+		else {
 			armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
-		//}
+		}*/
 		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 
@@ -263,7 +320,7 @@ void stackCubes()
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(930);
+	backLiftPID(930, 1000);
 	trayLift.moveVelocity(0);
 	movePID(8, 8, slowMoveKP, 300);
 
@@ -322,7 +379,7 @@ void blue()
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(930);
+	backLiftPID(930, 1000);
 	trayLift.moveVelocity(0);
 	movePID(5, 5, slowMoveKP, 300);
 
@@ -427,6 +484,9 @@ void initialize()
 	}
 
 	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
+
+	pros::Task trayTaskHandle(trayTask);
+	pros::Task armTaskHandle(armTask);
 }
 
 //void disabled() {}
