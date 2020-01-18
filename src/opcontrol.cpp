@@ -34,6 +34,8 @@ bool isPressed = false;
 double slowTraySpeed = 27.5; 
 double fastTraySpeed = 200;
 bool holdTray = false;
+bool holdTray2 = false;
+int trayPosition = 400;
 bool holdLift = false;
 double slowMoveKP = 0.0005;//0.001
 double fastMoveKP = 0.002;
@@ -41,6 +43,7 @@ int holdToggle = 0;
 auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -3}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
 void trayTask(void *param);
+void trayLiftTask(void *param);
 //void armTask(void *param);
 //backLiftPID(400);
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
@@ -60,10 +63,10 @@ void backLiftPID(double degrees)
 	TL.error = TL.target - TL.sensor;
 	int timer = 0;
 
-	while (true)//(abs(TL.error) >= 40)
+	while (abs(TL.error) >= 40)//(abs(TL.error) >= 40)
 	{									   //or while(timer < 50){
-		TL.kP = 0.4;					   //need tuning
-		TL.kD = 0;					   //need tuning
+		TL.kP = 0.5;					   //need tuning
+		TL.kD = 0.2;					   //need tuning
 		TL.kI = 0;						   //need tuning
 		TL.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
 		TL.error = TL.target - TL.sensor;
@@ -74,6 +77,7 @@ void backLiftPID(double degrees)
 		trayLift.moveVelocity(TL.speed);
 		//fill
 		timer += 20;
+		std::cout << "\nPot Value:" << trayLift.getPosition();
 		pros::delay(20);
 	}
 }
@@ -86,7 +90,7 @@ void trayLiftPID(double value)
 	TL.error = TL.target - TL.sensor;
 	int timer = 0;
 
-	while (true)
+	while (true)//check GIT
 	{									   //or while(timer < 50){
 		TL.kP = 0.2;					   //need tuning
 		TL.kD = 0.1;					   //need tuning
@@ -170,17 +174,47 @@ void trayTask(void *){
 		if (controller[ControllerDigital::right].changedToPressed())
 		{
 			holdTray = !holdTray;
+			pros::delay(100);
 		}
 		if (holdTray){					//or while(timer < 50){
-			backLiftPID(400);
-			holdTray = !holdTray;
-			pros::delay(100);
+			//backLiftPID(400);
+			//holdTray = !holdTray;
+			//pros::delay(100);
 		}
 		else {
 			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
 				fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
 		}
 		pros::delay(25);
+	}
+}
+
+void trayLiftTask(void *){
+	while(true){
+	std::cout << "\nPot Value:" << holdTray;
+	TL.target = trayPosition;
+	TL.integral = 0;
+	TL.sensor = trayLift.getPosition();
+	TL.error = TL.target - TL.sensor;
+	int timer = 0;
+
+	while (holdTray)//(abs(TL.error) >= 40)
+	{									   //or while(timer < 50){
+		TL.kP = 0.4;					   //need tuning
+		TL.kD = 0;					   //need tuning
+		TL.kI = 0;						   //need tuning
+		TL.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
+		TL.error = TL.target - TL.sensor;
+		TL.derivative = TL.error - TL.previous_error;
+		TL.integral += TL.error;
+		TL.previous_error = TL.error;
+		TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
+		trayLift.moveVelocity(TL.speed);
+		//fill
+		timer += 20;
+		//std::cout << "\nPot Value:" << holdTray;
+		pros::delay(20);
+	}
 	}
 }
 
@@ -208,7 +242,9 @@ void armTask(void *){
 
 void opcontrol()
 {
-	
+	pros::Task trayLiftTaskHandle(trayLiftTask);
+	pros::Task trayTaskHandle(trayTask);
+	pros::Task armTaskHandle(armTask);
 	
 	 while (true)
 	{
@@ -245,7 +281,7 @@ void opcontrol()
 		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
 
 		//std::cout << "\nRoller Temperature:" << rollerOne.get_temperature();
-	std::cout << "\nPot Value:" << trayPot.get_value();
+	
 		
 		//std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
 		/*if (controller.getDigital(ControllerDigital::left)) {
@@ -292,6 +328,7 @@ void collectCubes()
 	//Pick up the cubes
 	rollers.moveVelocity(200);
 	movePID(25, 25, slowMoveKP, 1500);
+	pros::delay(2000);
 	movePID(28, 28, slowMoveKP, 1500);
 
 	//Move back to wall align
@@ -313,7 +350,7 @@ void stackCubes()
 
 	//Straighten up the tray and align bottom
 	std::cout << "\nPot Value:" << trayPot.get_value();
-	trayLiftPID(930);
+	trayLiftPID(1300);
 	std::cout << "\nPot Value:" << trayPot.get_value();
 	trayLift.moveVelocity(0);
 	movePID(8, 8, slowMoveKP, 300);
@@ -324,22 +361,43 @@ void stackCubes()
 	// pros::delay(200);
 	// movePID(-15, -15, slowMoveKP, 1500);
 	// rollers.moveVelocity(0);
+
 }
 
 void red()
-{
+{/*
 	rollers.moveVelocity(-200);
 	pros::delay(300);
 	rollers.moveVelocity(200);
-	collectCubes();
+	//Flip out
+	rollers.moveVelocity(-200);
+	pros::delay(400);
 	rollers.moveVelocity(0);
+
+	trayLift.moveVelocity(-200);
+	pros::delay(650);
+	trayLift.moveVelocity(0);
+	pros::delay(500);
+
+	//Pick up the cubes
+	rollers.moveVelocity(200);
+	movePID(25, 25, slowMoveKP, 1500);
+	pros::delay(2000);
+	movePID(30, 30, slowMoveKP, 1500);
+
+	//Move back to wall align
+	//movePID(-43, -43, slowMoveKP, 2000);
+	pros::delay(700);
+	
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	movePID(-42.5, -42.5, slowMoveKP, 1000);
+	movePID(-49, -49, slowMoveKP, 1000);
+	rollers.moveVelocity(0);
+	//pros::delay(2000);
+	pros::delay(200); 
+	movePID(27 , -27, slowMoveKP, 800);
 	pros::delay(500);
-	movePID(17, -17, slowMoveKP, 800);
-	pros::delay(500);
-	movePID(13, 13, slowMoveKP, 1000);
+	movePID(27, 27, slowMoveKP, 1000);
 	pros::delay(500);
 	//movePID(25, 25, slowMoveKP, 1000);
 
@@ -350,14 +408,20 @@ void red()
 	armLift.moveVelocity(0);
 	rollers.moveVelocity(-100);
 	pros::delay(400);
-	rollers.moveVelocity(0);
+	rollers.moveVelocity(0);*/
 
 	//Straighten up the tray and align bottom
 	std::cout << "\nPot Value:" << trayPot.get_value();
-	trayLiftPID(930);
-	std::cout << "\nPot Value:" << trayPot.get_value();
-	trayLift.moveVelocity(0);
-	movePID(8, 8, slowMoveKP, 300);
+	//trayLift.moveVelocity(200);
+	//pros::delay(2000);
+	// holdTray=true;
+	// trayPosition = 950;
+	// pros::delay(4000);
+	// holdTray=false;
+	// //pros::delay(100000);
+	backLiftPID(900);
+	//holdTray2=false;
+	movePID(-20,-20, slowMoveKP, 1000);
 }
 
 void redBig()
@@ -520,8 +584,9 @@ void initialize()
 
 	pros::lcd::set_text(0, convert(lcdCounter) + " (SELECTED)");
 
-	pros::Task trayTaskHandle(trayTask);
-	pros::Task armTaskHandle(armTask);
+	//pros::Task trayTaskHandle(trayTask);
+	//pros::Task armTaskHandle(armTask);
+	//pros::Task trayLiftTaskHandle(trayLiftTask);
 }
 
 //void disabled() {}
