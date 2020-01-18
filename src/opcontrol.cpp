@@ -50,33 +50,33 @@ void armTask(void *param);
 //float radius; //radius = sector/dTheta
 //End
 
-void backLiftPID(double degrees, int ms)
+void backLiftPID(double degrees)
 {
-	LT.target = degrees;
-	LT.integral = 0;
-	LT.sensor = trayLift.getPosition();
-	LT.error = LT.target - LT.sensor;
+	TL.target = degrees;
+	TL.integral = 0;
+	TL.sensor = trayLift.getPosition();
+	TL.error = TL.target - TL.sensor;
 	int timer = 0;
 
-	while (timer < ms)
-	{										//or while(timer < 50){
-		LT.kP = 0.17;						//need tuning
-		LT.kD = 0.01;							//need tuning
-		LT.kI = 0;							//need tuning
-		LT.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
-		LT.error = LT.target - LT.sensor;
-		LT.derivative = LT.error - LT.previous_error;
-		LT.integral += LT.error;
-		LT.previous_error = LT.error;
-		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
-		trayLift.moveVelocity(LT.speed);
+	while (abs(TL.error) >= 40)
+	{									   //or while(timer < 50){
+		TL.kP = 0.4;					   //need tuning
+		TL.kD = 0;					   //need tuning
+		TL.kI = 0;						   //need tuning
+		TL.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
+		TL.error = TL.target - TL.sensor;
+		TL.derivative = TL.error - TL.previous_error;
+		TL.integral += TL.error;
+		TL.previous_error = TL.error;
+		TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
+		trayLift.moveVelocity(TL.speed);
 		//fill
 		timer += 20;
 		pros::delay(20);
 	}
 }
 
-void trayLiftPID(double value)
+/*void trayLiftPID(double value)
 {
 	TL.target = value;
 	TL.integral = 0;
@@ -102,9 +102,9 @@ void trayLiftPID(double value)
 		std::cout << "\nPot Value:" << trayPot.get_value();
 	}
 
-}
+}*/
 
-void armLiftPID(double degrees, int ms)
+void armLiftPID(double degrees)
 {
 	LT.target = degrees;
 	LT.integral = 0;
@@ -112,7 +112,7 @@ void armLiftPID(double degrees, int ms)
 	LT.error = LT.target - LT.sensor;
 	int timer = 0;
 
-	while (timer < ms)
+	while (abs(LT.error) >= 40)
 	{									   //or while(timer < 50){
 		LT.kP = 0.15;					   //need tuning
 		LT.kD = 0.1;					   //need tuning
@@ -161,23 +161,16 @@ void movePID(double distanceL, double distanceR, double speedkP, int ms)
 
 void trayTask(void *){
 
+	//TL.target = 800;
+
 	while (true)
 	{
 		if (controller[ControllerDigital::right].changedToPressed())
 		{
 			holdTray = !holdTray;
 		}
-		if (holdTray){										//or while(timer < 50){
-			TL.kP = 0.17;						//need tuning
-			TL.kD = 0.01;							//need tuning
-			TL.kI = 0;							//need tuning
-			TL.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
-			TL.error = TL.target - TL.sensor;
-			TL.derivative = TL.error - TL.previous_error;
-			TL.integral += TL.error;
-			TL.previous_error = TL.error;
-			TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
-			trayLift.moveVelocity(LT.speed);
+		if (holdTray){					//or while(timer < 50){
+			backLiftPID(400);
 		}
 		else {
 			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
@@ -188,6 +181,9 @@ void trayTask(void *){
 }
 
 void armTask(void *){
+	
+	//LT.target = 400;
+	
 	while (true){
 		if (controller[ControllerDigital::A].changedToPressed())
 		{
@@ -196,15 +192,7 @@ void armTask(void *){
 
 		if (holdLift)
 		{
-			LT.kP = 0.15;					   //need tuning
-			LT.kD = 0.1;					   //need tuning
-			LT.kI = 0;						   //need tuning
-			LT.sensor = armLift.getPosition(); // = sensor.getValue || post setup
-			LT.error = LT.target - LT.sensor;
-			LT.derivative = LT.error - LT.previous_error;
-			LT.integral += LT.error;
-			LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
-			armLift.moveVelocity(LT.speed);
+			armLiftPID(400);
 		}
 		else {
 			armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
@@ -229,7 +217,7 @@ void opcontrol()
 			trayLift.moveVelocity(200);
 			pros::delay(0.3);
 			trayLift.moveVelocity(-1);
-			//backLiftPID(400, 100);
+			//backLiftPID(400);
 		}
 		else {
 			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
@@ -320,7 +308,7 @@ void stackCubes()
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(930, 1000);
+	backLiftPID(930);
 	trayLift.moveVelocity(0);
 	movePID(8, 8, slowMoveKP, 300);
 
@@ -379,7 +367,7 @@ void blue()
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(930, 1000);
+	backLiftPID(930);
 	trayLift.moveVelocity(0);
 	movePID(5, 5, slowMoveKP, 300);
 
