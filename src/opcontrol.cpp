@@ -28,20 +28,21 @@ okapi::Motor armLift(9);
 okapi::MotorGroup rollers({-5, 8});
 okapi::Motor rollerOne(-5);
 okapi::Motor rollerTwo(8); 
-int lcdCounter = 2;
+int lcdCounter = 1;
 int buttonCount = 0;
 bool isPressed = false;
 double slowTraySpeed = 27.5; 
 double fastTraySpeed = 200;
 bool holdTray = false;
 bool holdLift = false;
-double slowMoveKP = 0.001;
+double slowMoveKP = 0.0005;//0.001
 double fastMoveKP = 0.002;
-
+int holdToggle = 0; 
 auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -3}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
 void trayTask(void *param);
-void armTask(void *param);
+//void armTask(void *param);
+//backLiftPID(400);
 //auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
 //NEED PORT auto lift = okapi::ChassisControllerFactory::create()
 //Position Tracking start
@@ -49,6 +50,7 @@ void armTask(void *param);
 //float sector; //sector = (renc+lence)/2
 //float radius; //radius = sector/dTheta
 //End
+
 
 void backLiftPID(double degrees)
 {
@@ -58,7 +60,7 @@ void backLiftPID(double degrees)
 	TL.error = TL.target - TL.sensor;
 	int timer = 0;
 
-	while (abs(TL.error) >= 40)
+	while (true)//(abs(TL.error) >= 40)
 	{									   //or while(timer < 50){
 		TL.kP = 0.4;					   //need tuning
 		TL.kD = 0;					   //need tuning
@@ -76,7 +78,7 @@ void backLiftPID(double degrees)
 	}
 }
 
-/*void trayLiftPID(double value)
+void trayLiftPID(double value)
 {
 	TL.target = value;
 	TL.integral = 0;
@@ -84,10 +86,10 @@ void backLiftPID(double degrees)
 	TL.error = TL.target - TL.sensor;
 	int timer = 0;
 
-	while (abs(TL.error) >= 10)
+	while (true)
 	{									   //or while(timer < 50){
-		TL.kP = 0.1;					   //need tuning
-		TL.kD = 0;					   //need tuning
+		TL.kP = 0.2;					   //need tuning
+		TL.kD = 0.1;					   //need tuning
 		TL.kI = 0;						   //need tuning
 		TL.sensor = trayPot.get_value(); // = sensor.getValue || post setup
 		TL.error = TL.target - TL.sensor;
@@ -102,7 +104,7 @@ void backLiftPID(double degrees)
 		std::cout << "\nPot Value:" << trayPot.get_value();
 	}
 
-}*/
+}
 
 void armLiftPID(double degrees)
 {
@@ -171,6 +173,8 @@ void trayTask(void *){
 		}
 		if (holdTray){					//or while(timer < 50){
 			backLiftPID(400);
+			holdTray = !holdTray;
+			pros::delay(100);
 		}
 		else {
 			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
@@ -274,7 +278,7 @@ void collectCubes()
 {
 	//Flip out
 	rollers.moveVelocity(-200);
-	pros::delay(1100);
+	pros::delay(400);
 	rollers.moveVelocity(0);
 	/*movePID(15, 15, fastMoveKP, 300);
 	armLift.moveVelocity(200);
@@ -308,31 +312,69 @@ void stackCubes()
 	rollers.moveVelocity(0);
 
 	//Straighten up the tray and align bottom
-	backLiftPID(930);
+	std::cout << "\nPot Value:" << trayPot.get_value();
+	trayLiftPID(930);
+	std::cout << "\nPot Value:" << trayPot.get_value();
 	trayLift.moveVelocity(0);
 	movePID(8, 8, slowMoveKP, 300);
 
-	//Outtake the cubes and move backwards
-	rollers.moveVelocity(-70);
-	armLift.moveVelocity(-200);
-	pros::delay(200);
-	movePID(-15, -15, slowMoveKP, 1500);
-	rollers.moveVelocity(0);
+	// //Outtake the cubes and move backwards
+	// rollers.moveVelocity(-70);
+	// armLift.moveVelocity(-200);
+	// pros::delay(200);
+	// movePID(-15, -15, slowMoveKP, 1500);
+	// rollers.moveVelocity(0);
 }
 
 void red()
 {
+	rollers.moveVelocity(-200);
+	pros::delay(300);
+	rollers.moveVelocity(200);
 	collectCubes();
 	rollers.moveVelocity(0);
 	//Move forward, turn, and into goal
 	//fastMovePID(10, 10, 900);
-	movePID(-43, -43, slowMoveKP, 800);
+	movePID(-42.5, -42.5, slowMoveKP, 1000);
 	pros::delay(500);
-	movePID(20.5, -20.5, slowMoveKP, 800);
+	movePID(17, -17, slowMoveKP, 800);
 	pros::delay(500);
-	movePID(11, 11, slowMoveKP, 1000);
+	movePID(13, 13, slowMoveKP, 1000);
 	pros::delay(500);
 	//movePID(25, 25, slowMoveKP, 1000);
+
+	rollers.moveVelocity(0);
+	//Get bottom cube in position to stack
+	armLift.moveVelocity(-200);
+	pros::delay(200);
+	armLift.moveVelocity(0);
+	rollers.moveVelocity(-100);
+	pros::delay(400);
+	rollers.moveVelocity(0);
+
+	//Straighten up the tray and align bottom
+	std::cout << "\nPot Value:" << trayPot.get_value();
+	trayLiftPID(930);
+	std::cout << "\nPot Value:" << trayPot.get_value();
+	trayLift.moveVelocity(0);
+	movePID(8, 8, slowMoveKP, 300);
+}
+
+void redBig()
+{
+	rollers.moveVelocity(-200);
+	pros::delay(300);
+	rollers.moveVelocity(200);
+
+	movePID(19.5, 19.5, slowMoveKP, 1000);
+	pros::delay(100);
+	movePID(-15.5, 15.5, slowMoveKP, 800);
+	pros::delay(100);
+	movePID(18, 18, slowMoveKP, 1000);
+	pros::delay(100);
+	movePID(-6.5, 6.5, slowMoveKP, 800);
+	pros::delay(100);
+	movePID(23.5, 23.5, slowMoveKP, 1000);
 
 	stackCubes();
 }
@@ -394,6 +436,9 @@ void autonomous()
 	case 3:
 		blue();
 		break;
+	case 4:
+		redBig();
+		break;
 	}
 }
 
@@ -422,9 +467,9 @@ void right_button()
 	if (!selected)
 	{
 		lcdCounter++;
-		if (lcdCounter > 3)
+		if (lcdCounter > 4)
 		{
-			lcdCounter = 3;
+			lcdCounter = 4;
 		}
 	}
 }
@@ -440,6 +485,8 @@ std::string convert(int arg)
 		return "Push";
 	case 3:
 		return "Blue";
+	case 4:
+		return "Red Big";
 	default:
 		return "No Auton";
 	}
