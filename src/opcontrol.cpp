@@ -18,66 +18,78 @@ pid LT;
 pid TL;
 //others
 
+//Initializing Sensors and Motors
 pros::ADIPotentiometer trayPot('H');
-pros::ADIPotentiometer liftPot('F');
-//pros::ADIEncoder trackingWheel('B', 'C');
-//Inertia sensor: port 13
+pros::ADIPotentiometer rollerLiftPot('F');
+pros::ADIEncoder trackingWheel('B', 'C');
 okapi::Controller controller;
+
 okapi::Motor trayLift(-16);
-okapi::Motor armLift(9);
+okapi::Motor rollerLift(9);
+
 okapi::MotorGroup rollers({-5, 8});
 okapi::Motor rollerOne(-5);
-okapi::Motor rollerTwo(8); 
-int lcdCounter = 1;
+okapi::Motor rollerTwo(8);
+/*
+case 0:
+		break;
+	case 1:
+		red();
+		break;
+	case 2:
+		push();
+		break;
+	case 3:
+		blue();
+		break;
+	case 4:
+		redBig();
+		break;
+*/
+//Initializing global variables
+int lcdCounter = 4;
 int buttonCount = 0;
 bool isPressed = false;
-double slowTraySpeed = 27.5; 
+
+double slowTraySpeed = 27.5;
 double fastTraySpeed = 200;
+
 bool holdTray = false;
-bool holdTray2 = false;
 int trayPosition = 400;
-bool holdLift = false;
-double slowMoveKP = 0.0005;//0.001
+bool holdRollerLift = false;
+int rollerLiftToggle = 0;
+int rollerLiftPosition;
+
+double slowMoveKP = 0.0005; //0.001
 double fastMoveKP = 0.002;
-int holdToggle = 0; 
+int holdToggle = 0;
+
+//Initializing chassis
 auto chassis = okapi::ChassisControllerFactory::create({20, 19}, {-11, -3}, okapi::AbstractMotor::gearset::green, {4.125, 10});
 
-void trayTask(void *param);
-void trayLiftTask(void *param);
-//void armTask(void *param);
-//backLiftPID(400);
-//auto motorGroup = okapi::ChassisControllerFactory::create({3,-10}, okapi::AbstractMotor::gearset::green,{4.125,10});
-//NEED PORT auto lift = okapi::ChassisControllerFactory::create()
-//Position Tracking start
-//float dTheta; //= (renc - lenc)/chaswidth -> radians
-//float sector; //sector = (renc+lence)/2
-//float radius; //radius = sector/dTheta
-//End
+//Initializing tasks
+void rollerLiftToggleTask(void *param);
+void trayPIDTask(void *param);
+void rollerLiftPIDTask(void *param);
+void trayToggleTask(void *param);
 
-
-void backLiftPID(double degrees)
+void opcontrol()
 {
-	TL.target = degrees;
-	TL.integral = 0;
-	TL.sensor = trayLift.getPosition();
-	TL.error = TL.target - TL.sensor;
-	int timer = 0;
+	//Starting Tasks
+	pros::Task rollerLiftToggleTaskHandle(rollerLiftToggleTask);
+	pros::Task trayPIDTaskHandle(trayPIDTask);
+	pros::Task rollerLiftPIDTaskHandle(rollerLiftPIDTask);
+	pros::Task trayToggleTaskHandle(trayToggleTask);
+	rollerLiftPosition = 400;
 
-	while (abs(TL.error) >= 40)//(abs(TL.error) >= 40)
-	{									   //or while(timer < 50){
-		TL.kP = 0.5;					   //need tuning
-		TL.kD = 0.2;					   //need tuning
-		TL.kI = 0;						   //need tuning
-		TL.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
-		TL.error = TL.target - TL.sensor;
-		TL.derivative = TL.error - TL.previous_error;
-		TL.integral += TL.error;
-		TL.previous_error = TL.error;
-		TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
-		trayLift.moveVelocity(TL.speed);
-		//fill
-		timer += 20;
-		std::cout << "\nPot Value:" << trayLift.getPosition();
+	while (true)
+	{
+		//Drive Mode:Arcade 
+		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
+		//Controls roller intake and its direction
+		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 
+			200 * controller.getDigital(ControllerDigital::Y) - 50 * controller.getDigital(ControllerDigital::L2));
+		
 		pros::delay(20);
 	}
 }
@@ -86,53 +98,52 @@ void trayLiftPID(double value)
 {
 	TL.target = value;
 	TL.integral = 0;
-	TL.sensor = trayPot.get_value();
+	TL.sensor = trayLift.get_position();
 	TL.error = TL.target - TL.sensor;
 	int timer = 0;
 
-	while (true)//check GIT
-	{									   //or while(timer < 50){
-		TL.kP = 0.2;					   //need tuning
-		TL.kD = 0.1;					   //need tuning
-		TL.kI = 0;						   //need tuning
-		TL.sensor = trayPot.get_value(); // = sensor.getValue || post setup
+	while ((abs(TL.error) >= 30))						
+	{							
+		TL.kP = 0.4;					 
+		TL.kD = 0;					
+		TL.kI = 0;						 
+		TL.sensor = trayLift.get_position(); 
 		TL.error = TL.target - TL.sensor;
 		TL.derivative = TL.error - TL.previous_error;
 		TL.integral += TL.error;
 		TL.previous_error = TL.error;
 		TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
 		trayLift.moveVelocity(TL.speed);
-		//fill
+		//std::cout << "\nPot Value:" << trayLift.get_position();
 		timer++;
 		pros::delay(20);
-		std::cout << "\nPot Value:" << trayPot.get_value();
 	}
-
 }
 
-void armLiftPID(double degrees)
+void rollerLiftPID(double degrees)
 {
 	LT.target = degrees;
 	LT.integral = 0;
-	LT.sensor = armLift.getPosition();
+	LT.sensor = rollerLift.getPosition();
 	LT.error = LT.target - LT.sensor;
 	int timer = 0;
 
-	while (abs(LT.error) >= 40)
-	{									   //or while(timer < 50){
-		LT.kP = 0.15;					   //need tuning
-		LT.kD = 0.1;					   //need tuning
-		LT.kI = 0;						   //need tuning
-		LT.sensor = armLift.getPosition(); // = sensor.getValue || post setup
+	while ((abs(LT.error) >= 40))//
+	{										  //or while(timer < 50){
+		LT.kP = 0.15;						  //need tuning
+		LT.kD = 0.1;						  //need tuning
+		LT.kI = 0;							  //need tuning
+		LT.sensor = rollerLift.getPosition(); // = sensor.getValue || post setup
 		LT.error = LT.target - LT.sensor;
 		LT.derivative = LT.error - LT.previous_error;
 		LT.integral += LT.error;
 		LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
-		armLift.moveVelocity(LT.speed);
+		rollerLift.moveVelocity(LT.speed);
 		//fill
 		timer += 20;
+		std::cout << "\n"
+				  << rollerLift.getPosition();
 		pros::delay(20);
-		
 	}
 }
 
@@ -165,253 +176,211 @@ void movePID(double distanceL, double distanceR, double speedkP, int ms)
 	chassis.tank(0, 0);
 }
 
-void trayTask(void *){
-
-	//TL.target = 800;
-
+//Toggle for the tray
+void trayToggleTask(void *)
+{
 	while (true)
 	{
-		if (controller[ControllerDigital::right].changedToPressed())
+		//Buttton Pressed --> hold lifts or unhold lifts
+		if (controller[ControllerDigital::A].changedToPressed())
 		{
 			holdTray = !holdTray;
 			pros::delay(100);
+
 		}
-		if (holdTray){					//or while(timer < 50){
-			//backLiftPID(400);
-			//holdTray = !holdTray;
-			//pros::delay(100);
+
+		if (holdTray)
+		{
+			//lifts tray enough to allow for lift to move
+			trayPosition = 400;
 		}
-		else {
+		else
+		{
+			//driver control tray movement
+			//mutliple speeds for precise stacking
 			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
-				fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
+								  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
 		}
 		pros::delay(25);
 	}
 }
 
-void trayLiftTask(void *){
-	while(true){
-	std::cout << "\nPot Value:" << holdTray;
-	TL.target = trayPosition;
-	TL.integral = 0;
-	TL.sensor = trayLift.getPosition();
-	TL.error = TL.target - TL.sensor;
-	int timer = 0;
-
-	while (holdTray)//(abs(TL.error) >= 40)
-	{									   //or while(timer < 50){
-		TL.kP = 0.4;					   //need tuning
-		TL.kD = 0;					   //need tuning
-		TL.kI = 0;						   //need tuning
-		TL.sensor = trayLift.getPosition(); // = sensor.getValue || post setup
-		TL.error = TL.target - TL.sensor;
-		TL.derivative = TL.error - TL.previous_error;
-		TL.integral += TL.error;
-		TL.previous_error = TL.error;
-		TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
-		trayLift.moveVelocity(TL.speed);
-		//fill
-		timer += 20;
-		//std::cout << "\nPot Value:" << holdTray;
-		pros::delay(20);
-	}
-	}
-}
-
-void armTask(void *){
-	
-	//LT.target = 400;
-	
-	while (true){
-		if (controller[ControllerDigital::A].changedToPressed())
-		{
-			holdLift = !holdLift;
-		}
-
-		if (holdLift)
-		{
-			armLiftPID(400);
-		}
-		else {
-			armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
-		}
-		
-		pros::delay(25);
-	}
-}
-
-void opcontrol()
+void trayPIDTask(void *)
 {
-	pros::Task trayLiftTaskHandle(trayLiftTask);
-	pros::Task trayTaskHandle(trayTask);
-	pros::Task armTaskHandle(armTask);
-	
-	 while (true)
+	while (true)
 	{
+		//std::cout << "\nPot Value:" << holdTray;
+		TL.target = trayPosition;
+		TL.integral = 0;
+		TL.sensor = trayLift.get_position();
+		TL.error = TL.target - TL.sensor;
+		int timer = 0;
 
-		/*if (controller[ControllerDigital::right].changedToPressed())
-		{
-			holdTray = !holdTray;
+		while (holdTray)						 //(abs(TL.error) >= 40)
+		{										 //or while(timer < 50){
+			TL.kP = 0.4;						 //need tuning
+			TL.kD = 0;							 //need tuning
+			TL.kI = 0;							 //need tuning
+			TL.sensor = trayLift.get_position(); // = sensor.getValue || post setup
+			TL.error = TL.target - TL.sensor;
+			TL.derivative = TL.error - TL.previous_error;
+			TL.integral += TL.error;
+			TL.previous_error = TL.error;
+			TL.speed = (TL.kP * TL.error + TL.kD * TL.derivative + TL.kI * TL.integral);
+			trayLift.moveVelocity(TL.speed);
+			//fill
+			timer += 20;
+			//std::cout << "\nPot Value:" << trayLift.get_position();
+			pros::delay(20);
 		}
-		if (holdTray){
-			trayLift.moveVelocity(200);
-			pros::delay(0.3);
-			trayLift.moveVelocity(-1);
-			//backLiftPID(400);
-		}
-		else {
-			trayLift.moveVelocity(slowTraySpeed * controller.getDigital(ControllerDigital::R1) +
-							  fastTraySpeed * controller.getDigital(ControllerDigital::left) - fastTraySpeed * controller.getDigital(ControllerDigital::R2));
-		}*/
-
-		/*if (controller[ControllerDigital::A].changedToPressed())
-		{
-			holdLift = !holdLift;
-		}
-
-		if (holdLift)
-		{
-			//armLiftPID(400, 800);
-			armLift.moveVelocity(1);
-		}
-		else {
-			armLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
-		}*/
-		//std::cout << intakeLS.get_value() << " " << indexerLS.get_value() << " " << hoodLS.get_value() << " " << intakeBall << " " << indexerBall << " " << hoodBall << std::endl;
-		chassis.arcade(controller.getAnalog(ControllerAnalog::leftY), controller.getAnalog(ControllerAnalog::rightX));
-
-		//std::cout << "\nRoller Temperature:" << rollerOne.get_temperature();
-	
-		
-		//std::cout <<buttonCount << " -- " << intakeSpeed <<std::endl;
-		/*if (controller.getDigital(ControllerDigital::left)) {
-			
-			buttonCount++;
-			if(buttonCount%2 == 1){
-				intakeSpeed = 100;
-			}
-			else {
-				intakeSpeed = 200;
-			}
-			pros::delay(300);
-		}*/
- 
-		rollers.moveVelocity(200 * controller.getDigital(ControllerDigital::L1) - 200 * controller.getDigital(ControllerDigital::Y) - 50 * controller.getDigital(ControllerDigital::L2));
-
-		pros::delay(20);
-	 }
+	}
 }
 
-//void
-/*void positionTracking(double x, double y){
-	int rect = 0; 
-	int length = 0;
-	int chaswidth = 0; 
-}*/
+void rollerLiftToggleTask(void *)
+{
+	while (true)
+	{
+		//Buttton Pressed --> hold lifts or unhold lifts
+		if (controller[ControllerDigital::up].changedToPressed())
+		{
+			rollerLiftToggle = 2;
+			pros::delay(200);
+		}
+		if (controller[ControllerDigital::right].changedToPressed())
+		{
+			rollerLiftToggle = 1;
+			pros::delay(200);
+		}
+		if (controller[ControllerDigital::down].changedToPressed())
+		{
+			rollerLiftToggle = 3;
+			pros::delay(200);
+		}
+		if (controller[ControllerDigital::B].changedToPressed())
+		{
+			rollerLiftToggle = 4;
+			pros::delay(200);
+		}
+		if (controller[ControllerDigital::X].changedToPressed())
+		{
+			rollerLiftToggle = 4;
+			pros::delay(200);
+		}
+
+		//whenever lift is held, ensures tray is held too
+		if (rollerLiftToggle == 2 || rollerLiftToggle == 1){
+			holdTray = true;
+		}
+
+		//small tower
+		if (rollerLiftToggle == 1)
+		{
+			rollerLiftPosition = 400;
+			holdRollerLift = true;
+		}
+		//medium tower
+		else if (rollerLiftToggle == 2)
+		{
+			rollerLiftPosition = 560;
+			holdRollerLift = true;
+		}
+		else if (rollerLiftToggle == 3)
+		{
+			holdRollerLift = false;
+			rollerLift.move_velocity(-5);
+		}
+		else
+		{
+			holdRollerLift = false;
+			rollerLift.controllerSet(controller.getDigital(ControllerDigital::X) - controller.getDigital(ControllerDigital::B));
+		}
+
+		pros::delay(25);
+	}
+}
+
+void rollerLiftPIDTask(void *)
+{
+	while (true)
+	{
+		//LT.target = rollerLiftPosition;
+		LT.integral = 0;
+		LT.sensor = rollerLift.getPosition();
+		LT.error = LT.target - LT.sensor;
+		int timer = 0;
+
+		while (holdRollerLift)
+		{										  //or while(timer < 50){
+			LT.kP = 0.4;						  //need tuning
+			LT.kD = 0.3;						  //need tuning
+			LT.kI = 0;							  //need tuning
+			LT.sensor = rollerLift.getPosition(); // = sensor.getValue || post setup
+			LT.error = rollerLiftPosition - LT.sensor;
+			LT.derivative = LT.error - LT.previous_error;
+			LT.integral += LT.error;
+			LT.speed = (LT.kP * LT.error + LT.kD * LT.derivative + LT.kI * LT.integral);
+			rollerLift.moveVelocity(LT.speed);
+			//fill
+			timer += 20;
+			
+			pros::delay(20);
+		}
+	}
+}
 
 //Autonomous
-void collectCubes()
-{
-	//Flip out
-	rollers.moveVelocity(-200);
-	pros::delay(400);
-	rollers.moveVelocity(0);
-	/*movePID(15, 15, fastMoveKP, 300);
-	armLift.moveVelocity(200);
-	pros::delay(1000);
-	armLift.moveVelocity(0);*/
-	trayLift.moveVelocity(-200);
-	pros::delay(650);
-	trayLift.moveVelocity(0);
-	pros::delay(500);
-
-	//Pick up the cubes
-	rollers.moveVelocity(200);
-	movePID(25, 25, slowMoveKP, 1500);
-	pros::delay(2000);
-	movePID(28, 28, slowMoveKP, 1500);
-
-	//Move back to wall align
-	//movePID(-43, -43, slowMoveKP, 2000);
-	pros::delay(500);
-	//rollers.moveVelocity(0);
-}
-
-void stackCubes()
-{
-	rollers.moveVelocity(0);
-	//Get bottom cube in position to stack
-	armLift.moveVelocity(-200);
-	pros::delay(200);
-	armLift.moveVelocity(0);
-	rollers.moveVelocity(-100);
-	pros::delay(400);
-	rollers.moveVelocity(0);
-
-	//Straighten up the tray and align bottom
-	std::cout << "\nPot Value:" << trayPot.get_value();
-	trayLiftPID(1300);
-	std::cout << "\nPot Value:" << trayPot.get_value();
-	trayLift.moveVelocity(0);
-	movePID(8, 8, slowMoveKP, 300);
-
-	// //Outtake the cubes and move backwards
-	// rollers.moveVelocity(-70);
-	// armLift.moveVelocity(-200);
-	// pros::delay(200);
-	// movePID(-15, -15, slowMoveKP, 1500);
-	// rollers.moveVelocity(0);
-
-}
 
 void red()
-{/*
+{
+	
+	//movePID(10, 10, slowMoveKP, 1500);
 	rollers.moveVelocity(-200);
-	pros::delay(300);
-	rollers.moveVelocity(200);
-	//Flip out
-	rollers.moveVelocity(-200);
-	pros::delay(400);
+	//rollerLift.moveVelocity(200);
+	pros::delay(800);
 	rollers.moveVelocity(0);
-
+	//rollerLift.moveVelocity(-200);
+	rollerLiftPID(0);
+	pros::delay(750);
 	trayLift.moveVelocity(-200);
-	pros::delay(650);
-	trayLift.moveVelocity(0);
-	pros::delay(500);
+	rollerLift.moveVelocity(-20);
 
-	//Pick up the cubes
+	//Flip out
 	rollers.moveVelocity(200);
-	movePID(25, 25, slowMoveKP, 1500);
-	pros::delay(2000);
-	movePID(30, 30, slowMoveKP, 1500);
+	//Pick up the cubes
 
+	pros::delay(500);
+	trayLift.moveVelocity(0);
+	movePID(45, 45, slowMoveKP*0.2, 1500);
+	
 	//Move back to wall align
 	//movePID(-43, -43, slowMoveKP, 2000);
-	pros::delay(700);
+	pros::delay(900);
+	movePID(31, 31, slowMoveKP*0.1, 1500);
+	pros::delay(1000);
 	
-	//Move forward, turn, and into goal
-	//fastMovePID(10, 10, 900);
 	movePID(-49, -49, slowMoveKP, 1000);
 	rollers.moveVelocity(0);
 	//pros::delay(2000);
 	pros::delay(200); 
-	movePID(27 , -27, slowMoveKP, 800);
+	movePID(26.5 , -26.5, slowMoveKP, 800);
 	pros::delay(500);
 	movePID(27, 27, slowMoveKP, 1000);
 	pros::delay(500);
 	//movePID(25, 25, slowMoveKP, 1000);
 
-	rollers.moveVelocity(0);
 	//Get bottom cube in position to stack
-	armLift.moveVelocity(-200);
-	pros::delay(200);
-	armLift.moveVelocity(0);
+	rollerLift.moveVelocity(0);
+
 	rollers.moveVelocity(-100);
 	pros::delay(400);
-	rollers.moveVelocity(0);*/
+	rollers.moveVelocity(0);
+
+	trayLiftPID(1000);
+	rollers.moveVelocity(-100);
+	pros::delay(500);
 
 	//Straighten up the tray and align bottom
-	std::cout << "\nPot Value:" << trayPot.get_value();
+	//std::cout << "\nPot Value:" << trayPot.get_value();
 	//trayLift.moveVelocity(200);
 	//pros::delay(2000);
 	// holdTray=true;
@@ -419,70 +388,121 @@ void red()
 	// pros::delay(4000);
 	// holdTray=false;
 	// //pros::delay(100000);
-	backLiftPID(900);
+	//backLiftPID(900);
 	//holdTray2=false;
 	movePID(-20,-20, slowMoveKP, 1000);
 }
 
-void redBig()
+void progskills()
 {
-	rollers.moveVelocity(-200);
+	/*rollerLiftPID(400);
+	movePID(10, 10, slowMoveKP, 1500);
+	rollerLiftPID(0);
+	pros::delay(500);
+	movePID(-10, -10, slowMoveKP, 1500);*/
+	rollers.moveVelocity(200);/*
+	movePID(15, 15, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);*/
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	movePID(7.5, -7.5, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	movePID(-7.5, 7.5, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	//movePID(7.5, -7.5, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	movePID(30, 30, slowMoveKP*0.2, 1500);
+	movePID(15, 15, slowMoveKP*0.2, 1500);
+	pros::delay(500);
+	movePID(-30, -30, slowMoveKP*0.2, 1500);
 	pros::delay(300);
-	rollers.moveVelocity(200);
-
-	movePID(19.5, 19.5, slowMoveKP, 1000);
-	pros::delay(100);
-	movePID(-15.5, 15.5, slowMoveKP, 800);
-	pros::delay(100);
-	movePID(18, 18, slowMoveKP, 1000);
-	pros::delay(100);
-	movePID(-6.5, 6.5, slowMoveKP, 800);
-	pros::delay(100);
-	movePID(23.5, 23.5, slowMoveKP, 1000);
-
-	stackCubes();
+	movePID(10, -10, slowMoveKP, 1500);
+	pros::delay(300);
+	movePID(31, 31, slowMoveKP*0.2, 1500);
+	rollers.moveVelocity(100);
+	pros::delay(2000);
+	rollers.moveVelocity(10);
+	trayLift.move_velocity(200);
+	pros::delay(700);
+	rollers.moveVelocity(0);
+	trayLift.move_velocity(50);
+	pros::delay(2800);
+	trayLift.move_velocity(-50);
+	pros::delay(200);
+	rollers.moveVelocity(-50);
+	movePID(-15, -15, slowMoveKP*0.2, 1500);
 }
 
 void push()
 {
-	movePID(30, 30, fastMoveKP, 1500);
-	movePID(-30, -30, fastMoveKP, 1500);
+	movePID(30, 30, slowMoveKP, 1500);
+	movePID(-30, -30, slowMoveKP, 1500);
 }
 
 void blue()
 {
-	collectCubes();
+	//pros::delay(1000);
+	rollerLiftPID(400);
+	//movePID(10, 10, slowMoveKP, 1500);
+	rollers.moveVelocity(-200);
+	//rollerLift.moveVelocity(200);
+	pros::delay(800);
 	rollers.moveVelocity(0);
-	//Move forward, turn, and into goal
-	//fastMovePID(10, 10, 900);
-	movePID(-43, -43, slowMoveKP, 800);
-	pros::delay(400);
-	movePID(-21, 21, slowMoveKP, 800);
-	pros::delay(400);
-	movePID(14, 14, slowMoveKP, 1000);
-	pros::delay(400);
+	//rollerLift.moveVelocity(-200);
+	rollerLiftPID(0);
+	pros::delay(500);
+	trayLift.moveVelocity(-200);
+	rollerLift.moveVelocity(-10);
+
+	//Flip out
+	rollers.moveVelocity(200);
+	//Pick up the cubes
+
+	pros::delay(500);
+	trayLift.moveVelocity(0);
+	movePID(45, 45, slowMoveKP*0.2, 1500);
+	
+	//Move back to wall align
+	//movePID(-43, -43, slowMoveKP, 2000);
+	pros::delay(900);
+	movePID(31, 31, slowMoveKP*0.1, 1500);
+	pros::delay(1000);
+	
+	movePID(-49, -49, slowMoveKP, 1000);
+	rollers.moveVelocity(0);
+	//pros::delay(2000);
+	pros::delay(200); 
+	movePID(-27 , 27, slowMoveKP, 800);
+	pros::delay(500);
+	movePID(27, 27, slowMoveKP, 1000);
+	pros::delay(500);
 	//movePID(25, 25, slowMoveKP, 1000);
 
-	rollers.moveVelocity(0);
 	//Get bottom cube in position to stack
-	armLift.moveVelocity(-200);
-	pros::delay(200);
-	armLift.moveVelocity(0);
+	rollerLift.moveVelocity(0);
+
 	rollers.moveVelocity(-100);
 	pros::delay(400);
 	rollers.moveVelocity(0);
 
-	//Straighten up the tray and align bottom
-	backLiftPID(930);
-	trayLift.moveVelocity(0);
-	movePID(5, 5, slowMoveKP, 300);
+	trayLiftPID(1000);
+	rollers.moveVelocity(-100);
+	pros::delay(500);
 
-	//Outtake the cubes and move backwards
-	rollers.moveVelocity(-70);
-	armLift.moveVelocity(-200);
-	pros::delay(200);
-	movePID(-15, -15, slowMoveKP, 1500);
-	rollers.moveVelocity(0);
+	//Straighten up the tray and align bottom
+	//std::cout << "\nPot Value:" << trayPot.get_value();
+	//trayLift.moveVelocity(200);
+	//pros::delay(2000);
+	// holdTray=true;
+	// trayPosition = 950;
+	// pros::delay(4000);
+	// holdTray=false;
+	// //pros::delay(100000);
+	//backLiftPID(900);
+	//holdTray2=false;
+	movePID(-20,-20, slowMoveKP, 1000);
 }
 
 void autonomous()
@@ -501,7 +521,7 @@ void autonomous()
 		blue();
 		break;
 	case 4:
-		redBig();
+		progskills();
 		break;
 	}
 }
@@ -550,7 +570,7 @@ std::string convert(int arg)
 	case 3:
 		return "Blue";
 	case 4:
-		return "Red Big";
+		return "Prog Skills";
 	default:
 		return "No Auton";
 	}
@@ -570,7 +590,7 @@ void initialize()
 	pros::lcd::register_btn1_cb(center_button);
 	pros::lcd::register_btn2_cb(right_button);
 	//pros::lcd::print(0, "Test Temperature", pros::trayLift::get_temperature());
-	
+
 	//intakeLS.calibrate();
 	//rollers.calibrate();
 	//indexerLS.calibrate();
