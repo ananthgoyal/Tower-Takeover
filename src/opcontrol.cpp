@@ -1,4 +1,4 @@
-\#include "main.h"
+#include "main.h"
 using namespace okapi;
 struct PID
 {
@@ -395,44 +395,103 @@ void red()
  
 void progskills()
 {
-    /*rollerLiftPID(400);
+    rollerLiftPID(400);
     movePID(10, 10, slowMoveKP, 1500);
     rollerLiftPID(0);
     pros::delay(500);
-    movePID(-10, -10, slowMoveKP, 1500);*/
-    rollers.moveVelocity(200);/*
+    movePID(-10, -10, slowMoveKP, 1500);
+    rollers.moveVelocity(200);
     movePID(15, 15, slowMoveKP*0.2, 1500);
     movePID(30, 30, slowMoveKP*0.2, 1500);
-    movePID(30, 30, slowMoveKP*0.2, 1500);*/
-    movePID(30, 30, slowMoveKP*0.2, 1500);
-    movePID(7.5, -7.5, slowMoveKP*0.2, 1500);
-    movePID(30, 30, slowMoveKP*0.2, 1500);
-    movePID(-7.5, 7.5, slowMoveKP*0.2, 1500);
-    movePID(30, 30, slowMoveKP*0.2, 1500);
-    //movePID(7.5, -7.5, slowMoveKP*0.2, 1500);
-    movePID(30, 30, slowMoveKP*0.2, 1500);
-    movePID(30, 30, slowMoveKP*0.2, 1500);
-    movePID(30, 30, slowMoveKP*0.2, 1500);
+    movePID(40, 40, slowMoveKP*0.2, 1500);
+    movePID(8, -8, slowMoveKP*0.2, 1500);
     movePID(30, 30, slowMoveKP*0.2, 1500);
     movePID(15, 15, slowMoveKP*0.2, 1500);
+    movePID(-8, 8, slowMoveKP*0.2, 1500);
+    movePID(30, 30, slowMoveKP*0.2, 1500);
+    movePID(30, 30, slowMoveKP*0.2, 1500);
+    movePID(30, 30, slowMoveKP*0.2, 1500);
+    movePID(25, 25, slowMoveKP*0.2, 1500);
     pros::delay(500);
+    rollers.moveVelocity(20); 
     movePID(-30, -30, slowMoveKP*0.2, 1500);
     pros::delay(300);
     movePID(10, -10, slowMoveKP, 1500);
     pros::delay(300);
     movePID(31, 31, slowMoveKP*0.2, 1500);
-    rollers.moveVelocity(100);
     pros::delay(2000);
     rollers.moveVelocity(10);
     trayLift.move_velocity(200);
     pros::delay(700);
     rollers.moveVelocity(0);
     trayLift.move_velocity(50);
-    pros::delay(2800);
+    pros::delay(3200);
+    movePID(10,10,slowMoveKP, 1500);
     trayLift.move_velocity(-50);
     pros::delay(200);
     rollers.moveVelocity(-50);
+    movePID(-20, -20, slowMoveKP*0.2, 1500);
+    movePID(-30,30, slowMoveKP*0.2, 1500);
+    movePID(-35, -35, slowMoveKP*0.2, 1500); 
+    pros::delay(1000);
+    rollers.moveVelocity(100); 
+    movePID(55, 55, slowMoveKP*0.2, 1500); 
+    movePID(30, 30, slowMoveKP*0.2, 1500);
+    //rollers.moveVelocity(-100); 
+    pros::delay(3000); 
+    rollers.moveVelocity(-50);
+    pros::delay(1500);
+    rollers.moveVelocity(0); 
     movePID(-15, -15, slowMoveKP*0.2, 1500);
+    
+    //pros::Task rollerLiftToggleTaskHandle(rollerLiftToggleTask);
+    pros::Task trayPIDTaskHandle(trayPIDTask);
+    pros::Task rollerLiftPIDTaskHandle(rollerLiftPIDTask);
+    //pros::Task trayToggleTaskHandle(trayToggleTask);
+    rollerLiftPosition = 560;
+    holdRollerLift = true;
+    holdTray = true;
+    trayPosition = 400;
+    movePID(15, 15, slowMoveKP*0.2, 1500);
+    rollers.moveVelocity(-75);
+    pros::delay(1000);
+    rollers.moveVelocity(0);
+    movePID(-10, -10, slowMoveKP, 1500);
+    holdRollerLift = false;
+    rollerLift.moveVelocity(-50);
+    pros::delay(2000); 
+    holdTray = false;
+    trayLift.moveVelocity(0);
+    rollerLift.moveVelocity(0);
+    movePID(-20, -20, slowMoveKP*0.2, 1500);
+    movePID(35, -35, slowMoveKP*0.2, 1500);
+    pros::delay(1000);
+    movePID(-30, -30, slowMoveKP*0.2, 1500);
+    rollers.moveVelocity(100);
+    movePID(40, 40, slowMoveKP*0.2, 1500);
+    movePID(20, 20, slowMoveKP*0.2, 1500);
+    pros::delay(3000); 
+    rollers.moveVelocity(-50);
+    pros::delay(1500);
+    rollers.moveVelocity(0); 
+    movePID(-10, -10, slowMoveKP*0.2, 1500);
+    rollerLiftPosition = 400;
+    holdRollerLift = true;
+    holdTray = true;
+    trayPosition = 400;
+    movePID(15, 15, slowMoveKP*0.2, 1500);
+    rollers.moveVelocity(-75);
+    pros::delay(1000);
+    rollers.moveVelocity(0);
+    movePID(-10, -10, slowMoveKP, 1500);
+    holdRollerLift = false;
+    rollerLift.moveVelocity(-50);
+    pros::delay(2000); 
+    holdTray = false;
+    trayLift.moveVelocity(0);
+    rollerLift.moveVelocity(0);
+    movePID(-20, -20, slowMoveKP*0.2, 1500);
+
 }
  
 void push()
